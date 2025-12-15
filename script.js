@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = params.get('type'); // 'recovery' ou 'signup'
 
         if (accessToken) {
-            // Salva o token temporariamente
+            // Salva o token temporariamente (IMPORTANTE PARA TROCA DE SENHA)
             currentUser = { email: "Verificado", token: accessToken };
 
             // Limpa a URL para ficar bonita
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================================
-    // 2. LÓGICA DE NOVA SENHA (forgot-step-2)
+    // 2. LÓGICA DE NOVA SENHA (REAL)
     // ============================================================
     if (forgotStep2) {
         forgotStep2.addEventListener('submit', async (e) => {
@@ -76,29 +76,56 @@ document.addEventListener('DOMContentLoaded', () => {
             const newPass = document.getElementById('new-pass').value;
             
             if(newPass.length < 6) return alert("A senha deve ter no mínimo 6 caracteres.");
+            // Verifica se temos o token capturado da URL
+            if(!currentUser || !currentUser.token) return alert("Erro de sessão: Token de recuperação não encontrado. Solicite o e-mail novamente.");
 
             const btn = forgotStep2.querySelector('button');
             const originalText = btn.textContent;
             btn.textContent = "Salvando...";
             btn.disabled = true;
 
-            // NOTA: Como o n8n atual não tem rota de "Update User", 
-            // vamos simular sucesso para não travar o usuário, 
-            // mas idealmente você deve adicionar essa rota no n8n.
-            try {
-                // Se quiser conectar no futuro: action: 'update_password'
-                await new Promise(r => setTimeout(r, 1500)); // Fake delay
-                
-                alert("🔒 Senha alterada com sucesso! Faça login com a nova senha.");
-                forgotModal.style.display = 'none';
-                loginScreen.style.display = 'flex'; // Volta pro login
-                
-                // Reseta os passos
-                forgotStep1.style.display = 'block';
-                forgotStep2.style.display = 'none';
+            if (USE_REAL_BACKEND) {
+                try {
+                    // Chama o n8n passando a Ação, a Nova Senha e o Token de Autorização
+                    const response = await fetch(AUTH_WEBHOOK, {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            action: 'update_password', 
+                            password: newPass,
+                            token: currentUser.token 
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    const responseData = Array.isArray(data) ? data[0] : data;
 
-            } catch (error) {
-                alert("Erro ao salvar senha.");
+                    // Se retornou o usuário atualizado (com ID), deu certo
+                    if (responseData.id || responseData.email || !responseData.code) {
+                        alert("🔒 Senha alterada com sucesso! Faça login com a nova senha.");
+                        
+                        // Limpa tudo e manda pro login
+                        forgotModal.style.display = 'none';
+                        loginScreen.style.display = 'flex'; 
+                        forgotStep1.style.display = 'block';
+                        forgotStep2.style.display = 'none';
+                        currentUser = null; // Limpa sessão temporária
+                    } else {
+                        const erro = responseData.msg || responseData.message || "Erro desconhecido";
+                        alert("Erro ao atualizar senha: " + erro);
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    alert("Erro de conexão ao salvar senha.");
+                }
+            } else {
+                // Simulação
+                setTimeout(() => {
+                    alert("Simulação: Senha alterada!");
+                    forgotModal.style.display = 'none';
+                    loginScreen.style.display = 'flex';
+                }, 1000);
             }
 
             btn.textContent = originalText;
@@ -251,8 +278,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function toggleMobileMenu() { sidebar.classList.toggle('mobile-open'); sidebarOverlay.classList.toggle('active'); }
     function closeMobileMenu() { sidebar.classList.remove('mobile-open'); sidebarOverlay.classList.remove('active'); }
+    function toggleDesktopMenu() { sidebar.classList.toggle('collapsed'); }
+
     if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-    if (desktopMenuToggle) desktopMenuToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+    if (desktopMenuToggle) desktopMenuToggle.addEventListener('click', toggleDesktopMenu);
     if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeMobileMenu);
 
     navItems.forEach(item => {
