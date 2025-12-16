@@ -4,8 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTool = 'prontuario'; 
     let selectedFiles = []; 
     let currentUser = null;
-    let mediaRecorder = null;
-    let audioChunks = [];
+    
+    // Variáveis do Gravador (RecordRTC)
+    let recorder = null; 
     let isRecording = false;
 
     // --- CONFIGURAÇÃO ---
@@ -22,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInitialsDisplay = document.getElementById('user-initials');
 
     // ============================================================
-    // 1. DETECTOR DE URL (CORREÇÃO DO PROBLEMA DO LINK)
+    // 1. DETECTOR DE URL (LINK MÁGICO / RECUPERAÇÃO DE SENHA)
     // ============================================================
     const hash = window.location.hash;
     
@@ -35,29 +36,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = params.get('type'); // 'recovery' ou 'signup'
 
         if (accessToken) {
-            // Salva o token temporariamente (IMPORTANTE PARA TROCA DE SENHA)
+            // Salva o token temporariamente
             currentUser = { email: "Verificado", token: accessToken };
 
-            // Limpa a URL para ficar bonita
+            // Limpa a URL
             window.history.replaceState(null, null, window.location.pathname);
 
             if (type === 'recovery') {
                 // CENÁRIO 1: Redefinir Senha
                 alert("🔔 Link aceito! Agora defina sua nova senha.");
-                
-                // Esconde Login e Abre o Modal de Senha
                 loginScreen.style.display = 'none';
                 forgotModal.style.display = 'flex';
-                
-                // Troca o formulário de "Pedir Email" para "Nova Senha"
                 if(forgotStep1) forgotStep1.style.display = 'none';
                 if(forgotStep2) forgotStep2.style.display = 'block';
 
             } else {
                 // CENÁRIO 2: Confirmação de Email (Signup)
                 alert("✅ E-mail confirmado com sucesso! Você está logado.");
-                
-                // Entra direto no sistema
                 loginScreen.style.display = 'none';
                 if(userInitialsDisplay) {
                     userInitialsDisplay.textContent = "OK";
@@ -68,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================================
-    // 2. LÓGICA DE NOVA SENHA (REAL)
+    // 2. LÓGICA DE NOVA SENHA
     // ============================================================
     if (forgotStep2) {
         forgotStep2.addEventListener('submit', async (e) => {
@@ -76,68 +71,50 @@ document.addEventListener('DOMContentLoaded', () => {
             const newPass = document.getElementById('new-pass').value;
             
             if(newPass.length < 6) return alert("A senha deve ter no mínimo 6 caracteres.");
-            // Verifica se temos o token capturado da URL
-            if(!currentUser || !currentUser.token) return alert("Erro de sessão: Token de recuperação não encontrado. Solicite o e-mail novamente.");
+            if(!currentUser || !currentUser.token) return alert("Erro de sessão: Token não encontrado.");
 
             const btn = forgotStep2.querySelector('button');
             const originalText = btn.textContent;
             btn.textContent = "Salvando...";
             btn.disabled = true;
 
-            if (USE_REAL_BACKEND) {
-                try {
-                    // Chama o n8n passando a Ação, a Nova Senha e o Token de Autorização
-                    const response = await fetch(AUTH_WEBHOOK, {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            action: 'update_password', 
-                            password: newPass,
-                            token: currentUser.token 
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    const responseData = Array.isArray(data) ? data[0] : data;
+            try {
+                const response = await fetch(AUTH_WEBHOOK, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'update_password', 
+                        password: newPass,
+                        token: currentUser.token 
+                    })
+                });
+                
+                const data = await response.json();
+                const responseData = Array.isArray(data) ? data[0] : data;
 
-                    // Se retornou o usuário atualizado (com ID), deu certo
-                    if (responseData.id || responseData.email || !responseData.code) {
-                        alert("🔒 Senha alterada com sucesso! Faça login com a nova senha.");
-                        
-                        // Limpa tudo e manda pro login
-                        forgotModal.style.display = 'none';
-                        loginScreen.style.display = 'flex'; 
-                        forgotStep1.style.display = 'block';
-                        forgotStep2.style.display = 'none';
-                        currentUser = null; // Limpa sessão temporária
-                    } else {
-                        const erro = responseData.msg || responseData.message || "Erro desconhecido";
-                        alert("Erro ao atualizar senha: " + erro);
-                    }
-
-                } catch (error) {
-                    console.error(error);
-                    alert("Erro de conexão ao salvar senha.");
-                }
-            } else {
-                // Simulação
-                setTimeout(() => {
-                    alert("Simulação: Senha alterada!");
+                if (responseData.id || responseData.email || !responseData.code) {
+                    alert("🔒 Senha alterada com sucesso! Faça login.");
                     forgotModal.style.display = 'none';
-                    loginScreen.style.display = 'flex';
-                }, 1000);
-            }
+                    loginScreen.style.display = 'flex'; 
+                    forgotStep1.style.display = 'block';
+                    forgotStep2.style.display = 'none';
+                    currentUser = null; 
+                } else {
+                    alert("Erro ao atualizar senha: " + (responseData.msg || "Erro desconhecido"));
+                }
 
+            } catch (error) {
+                console.error(error);
+                alert("Erro de conexão ao salvar senha.");
+            }
             btn.textContent = originalText;
             btn.disabled = false;
         });
     }
 
     // ============================================================
-    // 3. RESTO DA LÓGICA (LOGIN, CADASTRO, CHAT...)
+    // 3. AUTH: LOGIN
     // ============================================================
-
-    // AUTH: LOGIN
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
@@ -159,7 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (Array.isArray(data)) data = data[0]; 
 
                 if (data && data.access_token) {
+                    // SUCESSO NO LOGIN
                     currentUser = { email: data.user.email, token: data.access_token };
+                    
                     const initials = (currentUser.email || "MD").substring(0,2).toUpperCase();
                     if(userInitialsDisplay) {
                         userInitialsDisplay.textContent = initials;
@@ -176,11 +155,20 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = originalBtnText; btn.disabled = false;
     });
 
-    // AUTH: CADASTRO
+    // ============================================================
+    // 4. AUTH: CADASTRO
+    // ============================================================
     const signupForm = document.getElementById('signup-form');
     if (signupForm) {
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Validação de Termos LGPD
+            const termsCheckbox = document.getElementById('signup-terms');
+            if (!termsCheckbox || !termsCheckbox.checked) {
+                return alert("Você deve aceitar os termos de uso (LGPD/HIPAA) para continuar.");
+            }
+
             const email = document.getElementById('signup-email').value;
             const pass = document.getElementById('signup-pass').value;
             const confirm = document.getElementById('signup-confirm').value;
@@ -191,29 +179,29 @@ document.addEventListener('DOMContentLoaded', () => {
             
             btn.textContent = "Cadastrando..."; btn.disabled = true;
 
-            if (USE_REAL_BACKEND) {
-                try {
-                    const response = await fetch(AUTH_WEBHOOK, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'signup', email: email, password: pass })
-                    });
-                    let data = await response.json();
-                    if (Array.isArray(data)) data = data[0];
+            try {
+                const response = await fetch(AUTH_WEBHOOK, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'signup', email: email, password: pass })
+                });
+                let data = await response.json();
+                if (Array.isArray(data)) data = data[0];
 
-                    if (data.user || data.id || (data.role === 'authenticated')) {
-                        alert("Cadastro realizado! Verifique seu e-mail.");
-                        signupModal.style.display = 'none';
-                        signupForm.reset();
-                    } else {
-                        alert("Erro: " + (data.msg || "Falha no cadastro"));
-                    }
-                } catch (e) { alert("Erro de conexão."); }
-            }
+                if (data.user || data.id || (data.role === 'authenticated')) {
+                    alert("Cadastro realizado! Verifique seu e-mail.");
+                    signupModal.style.display = 'none';
+                    signupForm.reset();
+                } else {
+                    alert("Erro: " + (data.msg || "Falha no cadastro"));
+                }
+            } catch (e) { alert("Erro de conexão."); }
             btn.textContent = originalText; btn.disabled = false;
         });
     }
 
-    // AUTH: ESQUECI SENHA (Passo 1)
+    // ============================================================
+    // 5. AUTH: ESQUECI SENHA (Passo 1)
+    // ============================================================
     if (forgotStep1) {
         forgotStep1.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -223,17 +211,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             btn.textContent = "Enviando..."; btn.disabled = true;
 
-            if (USE_REAL_BACKEND) {
-                try {
-                    await fetch(AUTH_WEBHOOK, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'forgot', email: email })
-                    });
-                    alert("Se o e-mail existir, você receberá um link.");
-                    forgotModal.style.display = 'none';
-                    forgotStep1.reset();
-                } catch (e) { alert("Erro de conexão."); }
-            }
+            try {
+                await fetch(AUTH_WEBHOOK, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'forgot', email: email })
+                });
+                alert("Se o e-mail existir, você receberá um link.");
+                forgotModal.style.display = 'none';
+                forgotStep1.reset();
+            } catch (e) { alert("Erro de conexão."); }
             btn.textContent = originalText; btn.disabled = false;
         });
     }
@@ -253,7 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // CHAT E INTERFACE
+    // ============================================================
+    // 6. CHAT E FERRAMENTAS
+    // ============================================================
     const TOOLS = {
         prontuario: { title: "SuGa PRONTUÁRIO", webhook: "https://n8n-n8n-start.zvu2si.easypanel.host/webhook/cfadce39-4d13-4a1e-ac7d-24ed345a5e9c", placeholder: "Digite a transcrição do áudio ou anexe arquivos..." },
         examinator: { title: "SuGa EXAMINATOR", webhook: "https://n8n-n8n-start.zvu2si.easypanel.host/webhook/processar-exame", placeholder: "Anexe os exames (PDF/Imagem) para análise..." },
@@ -313,33 +301,67 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.style.height = 'auto';
     }
 
+    // ============================================================
+    // 7. GRAVAÇÃO DE ÁUDIO (CORRIGIDA PARA WAV - AZURE)
+    // ============================================================
     if (btnMic) btnMic.addEventListener('click', async () => {
         if (!isRecording) {
             try {
+                // Solicita acesso ao microfone
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-                mediaRecorder.onstop = () => {
-                    selectedFiles.push(new File([new Blob(audioChunks, {type: 'audio/webm'})], `gravacao_${Date.now()}.webm`, {type: 'audio/webm'}));
-                    renderFileList();
-                    stream.getTracks().forEach(t => t.stop());
-                };
-                mediaRecorder.start();
+                
+                // --- USO DO RECORDRTC (WAV) ---
+                if (typeof RecordRTC === 'undefined') {
+                    // Se não tiver a biblioteca, alerta mas não quebra tudo
+                    alert("Erro: Biblioteca RecordRTC não carregada. Verifique o index.html.");
+                    return;
+                }
+
+                recorder = new RecordRTC(stream, {
+                    type: 'audio',
+                    mimeType: 'audio/wav',
+                    recorderType: RecordRTC.StereoAudioRecorder, // Força WAV
+                    numberOfAudioChannels: 1, // Mono (Melhor para Speech-to-Text)
+                    desiredSampRate: 16000 // 16kHz (Padrão Azure)
+                });
+
+                recorder.startRecording();
                 isRecording = true;
+                
+                // Feedback Visual
                 btnMic.classList.add('recording');
                 btnMic.querySelector('span').textContent = 'stop_circle';
-                chatInput.placeholder = "Gravando...";
-            } catch (e) { alert("Erro ao acessar microfone."); }
+                chatInput.placeholder = "Gravando (WAV)...";
+
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao acessar microfone. Verifique as permissões.");
+            }
         } else {
-            mediaRecorder?.stop();
-            isRecording = false;
-            btnMic.classList.remove('recording');
-            btnMic.querySelector('span').textContent = 'mic';
-            chatInput.placeholder = TOOLS[currentTool].placeholder;
+            // Parar Gravação
+            recorder.stopRecording(() => {
+                const blob = recorder.getBlob();
+                // Cria arquivo WAV
+                const file = new File([blob], `gravacao_${Date.now()}.wav`, { type: 'audio/wav' });
+                
+                // Adiciona à lista de arquivos para envio
+                selectedFiles.push(file);
+                renderFileList();
+                
+                // Limpa UI
+                isRecording = false;
+                btnMic.classList.remove('recording');
+                btnMic.querySelector('span').textContent = 'mic';
+                chatInput.placeholder = TOOLS[currentTool].placeholder;
+                
+                // Libera câmera/mic
+                recorder.getInternalRecorder().blob = null; 
+                recorder.camera.stop(); 
+            });
         }
     });
 
+    // Controle de Arquivos (Anexos)
     btnAttachment.addEventListener('click', () => hiddenFileInput.click());
     hiddenFileInput.addEventListener('change', (e) => {
         selectedFiles = [...selectedFiles, ...Array.from(e.target.files)].slice(0, 10);
@@ -353,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedFiles.forEach((file, index) => {
             const chip = document.createElement('div');
             chip.className = 'file-chip';
-            const icon = (file.type.includes('audio') || file.name.endsWith('.webm')) ? 'mic' : 'description';
+            const icon = (file.type.includes('audio') || file.name.endsWith('.wav')) ? 'mic' : 'description';
             chip.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.1rem">${icon}</span> <span class="file-name">${file.name}</span> <button class="remove-btn" onclick="removeFile(${index})">&times;</button>`;
             fileListContainer.appendChild(chip);
         });
@@ -365,8 +387,24 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
     chatInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; if(this.value==='') this.style.height='auto'; });
 
+    // ============================================================
+    // 8. ENVIO DE MENSAGEM (COM AUDITORIA CORRIGIDA)
+    // ============================================================
     async function handleSend() {
-        if (isRecording) { mediaRecorder.stop(); isRecording = false; btnMic.classList.remove('recording'); btnMic.querySelector('span').textContent='mic'; await new Promise(r => setTimeout(r, 500)); }
+        // Se estiver gravando, para e envia
+        if (isRecording) { 
+            recorder.stopRecording(() => {
+                const blob = recorder.getBlob();
+                const file = new File([blob], `gravacao_${Date.now()}.wav`, { type: 'audio/wav' });
+                selectedFiles.push(file);
+                // Recursivamente chama handleSend após parar o áudio
+                isRecording = false;
+                btnMic.classList.remove('recording');
+                btnMic.querySelector('span').textContent='mic';
+                handleSend(); // Chama de novo agora com o arquivo
+            });
+            return;
+        }
         
         const text = chatInput.value.trim();
         if (!text && selectedFiles.length === 0) return;
@@ -394,10 +432,20 @@ document.addEventListener('DOMContentLoaded', () => {
         filesToSend.forEach((f, i) => formData.append(`file_${i}`, f));
         if(text) formData.append('textoBruto', text);
 
+        // --- CORREÇÃO DA AUDITORIA (Envia email para o n8n) ---
+        // Se currentUser for null (deslogado por refresh), tenta enviar "anonimo_erro"
+        // mas idealmente o sistema forçaria o login antes.
+        const userEmail = currentUser ? currentUser.email : "anonimo_erro";
+        console.log("AUDITORIA - Enviando:", userEmail); // Debug no console
+        formData.append('user_email', userEmail);
+        // -----------------------------------------------------
+
         try {
             const res = await fetch(TOOLS[currentTool].webhook, { method: 'POST', body: formData });
             const data = await res.json();
-            const aiText = data.resumoCompleto || data.text || JSON.stringify(data);
+            
+            // Tenta pegar o texto de várias formas possíveis (resumoCompleto, text, etc)
+            const aiText = data.resumoCompleto || data.text || (data.length ? JSON.stringify(data) : "Processamento concluído.");
             
             document.getElementById(ldId)?.remove();
             
@@ -406,9 +454,10 @@ document.addEventListener('DOMContentLoaded', () => {
             chatHistory.appendChild(aiWrapper);
 
         } catch (e) {
+            console.error(e);
             document.getElementById(ldId)?.remove();
             const errDiv = document.createElement('div'); errDiv.className = 'message-wrapper ai';
-            errDiv.innerHTML = `<div class="avatar-icon ai">⚠️</div><div class="message-content">Erro ao processar.</div>`;
+            errDiv.innerHTML = `<div class="avatar-icon ai">⚠️</div><div class="message-content">Erro ao processar. Verifique o console.</div>`;
             chatHistory.appendChild(errDiv);
         }
         chatHistory.scrollTop = chatHistory.scrollHeight;
