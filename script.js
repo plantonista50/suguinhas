@@ -438,7 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const userEmail = currentUser ? currentUser.email : "anonimo_erro";
         formData.append('user_email', userEmail);
         console.log("AUDITORIA - Enviando:", userEmail); // Debug no console
-        formData.append('user_email', userEmail);
         // -----------------------------------------------------
 
         try {
@@ -469,4 +468,5 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText(pre.textContent).then(() => { btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='#666',2000); });
     };
 });
+
 
