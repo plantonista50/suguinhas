@@ -312,7 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // --- USO DO RECORDRTC (WAV) ---
                 if (typeof RecordRTC === 'undefined') {
-                    // Se não tiver a biblioteca, alerta mas não quebra tudo
                     alert("Erro: Biblioteca RecordRTC não carregada. Verifique o index.html.");
                     return;
                 }
@@ -388,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; if(this.value==='') this.style.height='auto'; });
 
     // ============================================================
-    // 8. ENVIO DE MENSAGEM (COM AUDITORIA CORRIGIDA)
+    // 8. ENVIO DE MENSAGEM (CORRIGIDO: SEM DUPLICIDADE DE EMAIL)
     // ============================================================
     async function handleSend() {
         // Se estiver gravando, para e envia
@@ -432,13 +431,11 @@ document.addEventListener('DOMContentLoaded', () => {
         filesToSend.forEach((f, i) => formData.append(`file_${i}`, f));
         if(text) formData.append('textoBruto', text);
 
-        // --- CORREÇÃO DA AUDITORIA (Envia email para o n8n) ---
-        // Se currentUser for null (deslogado por refresh), tenta enviar "anonimo_erro"
-        // mas idealmente o sistema forçaria o login antes.
+        // --- CORREÇÃO DA AUDITORIA (Envia email apenas UMA vez) ---
         const userEmail = currentUser ? currentUser.email : "anonimo_erro";
-        formData.append('user_email', userEmail);
+        formData.append('user_email', userEmail); 
         console.log("AUDITORIA - Enviando:", userEmail); // Debug no console
-        // -----------------------------------------------------
+        // ---------------------------------------------------------
 
         try {
             const res = await fetch(TOOLS[currentTool].webhook, { method: 'POST', body: formData });
@@ -468,5 +465,3 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText(pre.textContent).then(() => { btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='#666',2000); });
     };
 });
-
-
