@@ -436,6 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Se currentUser for null (deslogado por refresh), tenta enviar "anonimo_erro"
         // mas idealmente o sistema forçaria o login antes.
         const userEmail = currentUser ? currentUser.email : "anonimo_erro";
+        formData.append('user_email', userEmail);
         console.log("AUDITORIA - Enviando:", userEmail); // Debug no console
         formData.append('user_email', userEmail);
         // -----------------------------------------------------
@@ -468,3 +469,4 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText(pre.textContent).then(() => { btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='#666',2000); });
     };
 });
+
