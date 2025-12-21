@@ -41,25 +41,63 @@
     </div>
 
     <div id="signup-modal" class="modal-overlay" style="display: none;">
-        <div class="login-box modal-box">
+        <div class="login-box modal-box" style="max-width: 550px;">
             <div class="modal-header">
-                <h3>Criar Conta</h3>
+                <h3 id="signup-title">Boas-vindas</h3>
                 <button class="close-modal">&times;</button>
             </div>
+            
             <form id="signup-form">
-                <div class="input-group"><span class="material-symbols-outlined">mail</span><input type="email" id="signup-email" placeholder="E-mail" required></div>
-                <div class="input-group"><span class="material-symbols-outlined">lock</span><input type="password" id="signup-pass" placeholder="Senha" required></div>
-                <div class="input-group"><span class="material-symbols-outlined">lock_reset</span><input type="password" id="signup-confirm" placeholder="Confirme" required></div>
                 
-                <div style="text-align: left; margin: 10px 0; font-size: 0.8rem; color: var(--text-secondary); display:flex; gap:10px; align-items:flex-start;">
-                    <input type="checkbox" id="signup-terms" required style="width:auto; margin-top:2px;">
-                    <label for="signup-terms">
-                        Concordo que os dados serão processados por IA para fins de assistência clínica e afirmo ser profissional de saúde autorizado. 
-                        <a href="#" style="color: var(--accent-color);">Ler Termos de Uso (BAA & LGPD)</a>.
-                    </label>
+                <div id="step-1-legal">
+                    <p style="text-align:left; font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px;">
+                        Para garantir a conformidade regulatória e a segurança dos dados, leia nossas diretrizes.
+                    </p>
+                    
+                    <div class="legal-scroll-box" id="legal-text-content">
+                        <strong>1. PROPOSTA DA FERRAMENTA</strong><br>
+                        1.1. O Plantonista 5.0 é um assistente de inteligência artifical projetado para otimizar a documentação médica.<br>
+                        1.2. O sistema atua como suporte administrativo, respeitando integralmente a autonomia e soberania da decisão médica.<br><br>
+
+                        <strong>2. SEGURANÇA E PRIVACIDADE (LGPD & HIPAA)</strong><br>
+                        2.1. A segurança dos dados é nossa prioridade. Utilizamos <strong>criptografia de ponta</strong> (em repouso e trânsito) para blindar todas as informaçõe passíveis de identificação.<br>
+                        2.2. Aplicamos protocolos rigorosos de <strong>anonimização</strong> (módulo Suga ANONM) para remover dados sensíveis e <strong>PHI</strong> (<em>Protected Health Information</em>) antes do processamento, garantindo o sigilo absoluto da identidade dos pacientes.<br>
+                        2.3. Atuamos em conformidade com a <strong>LGPD</strong> (Lei Geral de Proteção de Dados), onde a plataforma figura como Operadora técnica segura.<br><br>
+
+                        <strong>3. RESPONSABILIDADE PROFISSIONAL</strong><br>
+                        3.1. Como tecnologia baseada em IA, podem ocorrer imprecisões. A validação final dos dados e condutas é responsabilidade exclusiva do médico.<br>
+                        3.2. O acesso é pessoal, intransferível e monitorado para garantir o uso ético.<br>
+                        3.3. O desenvolvedor se isenta totalmente da responsabilidade por quaisquer danos, diretos ou indiretos, decorrentes do uso negligente das informações sugeridas pela ferramenta.<br><br>
+
+                        <em style="color:var(--accent-color);">Ao avançar, você confirma a leitura e o acordo com estes protocolos de segurança.</em>
+                        <br><br><br>
+                    </div>
+
+                    <div style="text-align: left; margin: 15px 0; font-size: 0.85rem; color: var(--text-secondary); display:flex; gap:10px; align-items:flex-start;">
+                        <input type="checkbox" id="signup-terms" disabled style="width:20px; height:20px; margin-top:2px; cursor:not-allowed;">
+                        <label for="signup-terms" id="label-terms" style="cursor:not-allowed; opacity: 0.5;">
+                            Li e concordo com os protocolos de segurança.
+                        </label>
+                    </div>
+
+                    <button type="button" class="login-btn" id="btn-next-step" disabled style="opacity: 0.5; cursor: not-allowed;">Continuar</button>
                 </div>
 
-                <button type="submit" class="login-btn">Cadastrar</button>
+                <div id="step-2-form" style="display: none;">
+                    <div class="input-group"><span class="material-symbols-outlined">badge</span><input type="text" id="signup-name" placeholder="Nome Completo" required></div>
+                    
+                    <div class="input-group"><span class="material-symbols-outlined">id_card</span><input type="text" id="signup-crm" placeholder="Ex: 1234CE" maxlength="10" required></div>
+                    
+                    <div class="input-group"><span class="material-symbols-outlined">mail</span><input type="email" id="signup-email" placeholder="E-mail corporativo" required></div>
+                    <div class="input-group"><span class="material-symbols-outlined">lock</span><input type="password" id="signup-pass" placeholder="Senha Forte" required></div>
+                    <div class="input-group"><span class="material-symbols-outlined">lock_reset</span><input type="password" id="signup-confirm" placeholder="Confirme a Senha" required></div>
+
+                    <button type="submit" class="login-btn" id="btn-signup-final">Finalizar Cadastro Seguro</button>
+                    
+                    <p style="margin-top:15px; font-size:0.8rem; cursor:pointer; color:var(--text-secondary);" id="btn-back-step">
+                        &larr; Voltar
+                    </p>
+                </div>
             </form>
         </div>
     </div>
@@ -180,11 +218,14 @@
                     <span class="material-symbols-outlined">send</span>
                 </button>
             </div>
-            <p class="disclaimer">O Plantonista 5.0 pode cometer erros. Verifique sempre as informações clínicas.</p>
+            
+            <div class="disclaimer-box">
+                <span class="material-symbols-outlined icon">verified_user</span>
+                <p>Ambiente criptografado. Valide sempre as informações clínicas.</p>
+            </div>
         </div>
     </main>
 
-    <script src="script.js?v=final_domain"></script>
+    <script src="script.js?v=crm_validation"></script>
 </body>
 </html>
-
