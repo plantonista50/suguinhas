@@ -91,13 +91,14 @@ body {
     margin-top: 10px; transition: 0.2s;
 }
 .login-btn:hover { background-color: #8ab4f8; }
+.login-btn:disabled { background-color: #444; color: #888; cursor: not-allowed; opacity: 0.7; }
 
 .auth-options { display: flex; justify-content: space-between; margin-top: 20px; font-size: 0.85rem; }
 .auth-options a { color: var(--text-secondary); text-decoration: none; transition: 0.2s; }
 .auth-options a:hover { color: var(--accent-color); }
 .login-footer { margin-top: 30px; font-size: 0.75rem; opacity: 0.5; margin-bottom: 0 !important; }
 
-/* --- SIDEBAR & MAIN CONTENT (CAMADA PADRÃO DA VERSÃO V0) --- */
+/* --- SIDEBAR & MAIN CONTENT --- */
 .sidebar {
     width: 260px; background-color: var(--sidebar-bg);
     display: flex; flex-direction: column; padding: 10px;
@@ -172,3 +173,39 @@ body {
     .chat-history { padding-left: 10px; padding-right: 10px; }
     .message-content { max-width: 95%; font-size: 0.9rem; }
 }
+
+/* --- NOVOS ESTILOS DPA/LGPD --- */
+.legal-scroll-box {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    height: 150px; /* Altura fixa para forçar scroll */
+    overflow-y: auto;
+    text-align: left;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 10px;
+    border-left: 3px solid var(--accent-color);
+}
+.legal-scroll-box strong { color: #fff; font-weight: 600; }
+.legal-scroll-box::-webkit-scrollbar { width: 6px; }
+.legal-scroll-box::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+.legal-scroll-box::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+.disclaimer-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.7rem;
+    color: #888;
+    background-color: rgba(0,0,0,0.3);
+    padding: 4px 12px;
+    border-radius: 12px;
+    max-width: 90%;
+}
+.disclaimer-box .icon { font-size: 1rem; color: #b0b0b0; }
+.disclaimer-box p { margin: 0; }
+.disclaimer-box strong { color: #aaa; }
