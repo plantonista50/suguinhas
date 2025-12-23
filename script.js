@@ -215,7 +215,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     loginScreen.style.opacity = '0';
                     setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
                 } else {
-                    alert("Erro: " + (data.error_description || "Credenciais inválidas."));
+                    // Captura 'msg' (seu n8n), 'message' (Supabase/Auth) ou 'error_description' (Padrão OAuth)
+                    const errorMsg = data.msg || data.message || data.error_description || "Credenciais inválidas.";
+                    alert("Erro: " + errorMsg);
                 }
             } catch (err) { alert("Erro de conexão."); } 
         } 
@@ -424,5 +426,6 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText(pre.textContent).then(() => { btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='#666',2000); });
     };
 });
+
 
 
