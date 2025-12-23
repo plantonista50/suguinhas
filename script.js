@@ -405,7 +405,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch(TOOLS[currentTool].webhook, { method: 'POST', body: formData });
             const data = await res.json();
-            const aiText = data.resumoCompleto || data.text || (data.length ? JSON.stringify(data) : "Processamento concluído.");
+            // Se vier mensagem de erro do n8n, usa ela. Se não, tenta os campos padrão.
+            const aiText = data.message || data.msg || data.resumoCompleto || data.text || (data.length ? JSON.stringify(data) : "Processamento concluído.");
             document.getElementById(ldId)?.remove();
             const aiWrapper = document.createElement('div'); aiWrapper.className = 'message-wrapper ai';
             aiWrapper.innerHTML = `<div class="avatar-icon ai"><span class="material-symbols-outlined">smart_toy</span></div><div class="message-content"><pre>${aiText}</pre><div style="text-align:right"><span class="material-symbols-outlined" style="cursor:pointer;color:#666" onclick="copyText(this)">content_copy</span></div></div>`;
@@ -423,4 +424,5 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText(pre.textContent).then(() => { btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='#666',2000); });
     };
 });
+
 
