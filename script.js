@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CONFIGURAÇÃO ---
     const USE_REAL_BACKEND = true; 
-    const AUTH_WEBHOOK = "https://n8n-n8n-start.zvu2si.easypanel.host/webhook/suga-auth"; 
+    const AUTH_WEBHOOK = "https://n8n-n8n.zvu2si.easypanel.host/webhook/suga-auth"; 
 
     // DOM ELEMENTS
     const loginScreen = document.getElementById('login-screen');
@@ -426,6 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText(pre.textContent).then(() => { btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='#666',2000); });
     };
 });
+
 
 
 
