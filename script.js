@@ -425,9 +425,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const pre = btn.closest('.message-content').querySelector('pre');
         navigator.clipboard.writeText(pre.textContent).then(() => { btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='#666',2000); });
     };
+
+    // ============================================================
+    // SELETOR DE TEMA (NATAL / PADRÃO)
+    // ============================================================
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    const themeIcon = document.getElementById('theme-icon');
+    const themeText = document.getElementById('theme-text');
+    let isXmas = false;
+
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            isXmas = !isXmas;
+            document.body.classList.toggle('xmas-mode');
+
+            if (isXmas) {
+                themeIcon.textContent = 'ac_unit'; // Ícone de floco de neve
+                themeText.textContent = 'Modo Natal';
+                themeBtn.style.color = '#ffd700'; // Dourado
+            } else {
+                themeIcon.textContent = 'settings'; // Ícone original
+                themeText.textContent = 'Configurações';
+                themeBtn.style.color = ''; // Volta ao padrão
+            }
+        });
+    }
 });
-
-
-
-
-
