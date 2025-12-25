@@ -55,26 +55,25 @@
                     </p>
                     
                     <div class="legal-scroll-box" id="legal-text-content">
-                                              <strong>1. TERMOS DE USO E PRIVACIDADE</strong><br>
-1.1. O Plantonista 5.0 é uma ferramenta de suporte à decisão clínica baseada em Inteligência Artificial, destinada exclusivamente a médicos.<br>
-1.2. O sistema atua como auxiliar administrativo. A responsabilidade final pela validação, edição e uso das informações no prontuário é exclusiva do profissional médico.<br><br>
+                        <strong>1. TERMOS DE USO E PRIVACIDADE</strong><br>
+                        1.1. O Plantonista 5.0 é uma ferramenta de suporte à decisão clínica baseada em Inteligência Artificial, destinada exclusivamente a médicos.<br>
+                        1.2. O sistema atua como auxiliar administrativo. A responsabilidade final pela validação, edição e uso das informações no prontuário é exclusiva do profissional médico.<br><br>
 
-<strong>2. SEGURANÇA DE DADOS E INFRAESTRUTURA</strong><br>
-2.1. Utilizamos infraestrutura de nuvem de classe mundial para garantir a segurança dos dados. Nossos parceiros de processamento incluem <strong>Microsoft Azure</strong> e <strong>OpenAI</strong>, garantindo criptografia de ponta a ponta.<br>
-2.2. O armazenamento de logs e autenticação é realizado via ambiente seguro (Supabase), com proteção contra acessos não autorizados.<br><br>
+                        <strong>2. SEGURANÇA DE DADOS E INFRAESTRUTURA</strong><br>
+                        2.1. Utilizamos infraestrutura de nuvem de classe mundial para garantir a segurança dos dados. Nossos parceiros de processamento incluem <strong>Microsoft Azure</strong> e <strong>OpenAI</strong>, garantindo criptografia de ponta a ponta.<br>
+                        2.2. O armazenamento de logs e autenticação é realizado via ambiente seguro (Supabase), com proteção contra acessos não autorizados.<br><br>
 
-<strong>3. ANONIMIZAÇÃO E SIGILO (MÓDULO DE PROTEÇÃO)</strong><br>
-3.1. Antes de qualquer processamento clínico, os dados de áudio e texto passam por um rigoroso <strong>processo de anonimização</strong> proprietário.<br>
-3.2. Identificadores diretos de pacientes (Nomes, CPF, Telefones) são removidos automaticamente por algoritmos de detecção, impedindo que a IA generativa tenha acesso à identidade dos pacientes.<br>
-3.3. O desenvolvedor não retém os dados de áudio ou imagens após o processamento da sessão, garantindo a transitoriedade da informação.<br><br>
+                        <strong>3. ANONIMIZAÇÃO E SIGILO (MÓDULO DE PROTEÇÃO)</strong><br>
+                        3.1. Antes de qualquer processamento clínico, os dados de áudio e texto passam por um rigoroso <strong>processo de anonimização</strong> proprietário.<br>
+                        3.2. Identificadores diretos de pacientes (Nomes, CPF, Telefones) são removidos automaticamente por algoritmos de detecção, impedindo que a IA generativa tenha acesso à identidade dos pacientes.<br>
+                        3.3. O desenvolvedor não retém os dados de áudio ou imagens após o processamento da sessão, garantindo a transitoriedade da informação.<br><br>
 
-<strong>4. LIMITAÇÃO DE RESPONSABILIDADE</strong><br>
-4.1. Como toda tecnologia baseada em LLM (Large Language Models), o sistema pode apresentar imprecisões ("alucinações"). É dever do médico conferir dosagens e terminologias.<br>
-4.2. Ao utilizar a ferramenta, o usuário declara estar ciente de que o software é uma ferramenta de meio, não substituindo o julgamento clínico humano.<br><br>
+                        <strong>4. LIMITAÇÃO DE RESPONSABILIDADE</strong><br>
+                        4.1. Como toda tecnologia baseada em LLM (Large Language Models), o sistema pode apresentar imprecisões ("alucinações"). É dever do médico conferir dosagens e terminologias.<br>
+                        4.2. Ao utilizar a ferramenta, o usuário declara estar ciente de que o software é uma ferramenta de meio, não substituindo o julgamento clínico humano.<br><br>
 
-<em style="color:var(--accent-color);">Ao prosseguir, você concorda com o processamento dos dados conforme descrito acima e atesta ser médico habilitado.</em>
-<br>
-                        
+                        <em style="color:var(--accent-color);">Ao prosseguir, você concorda com o processamento dos dados conforme descrito acima e atesta ser médico habilitado.</em>
+                        <br>
                     </div>
 
                     <div style="text-align: left; margin: 15px 0; font-size: 0.85rem; color: var(--text-secondary); display:flex; gap:10px; align-items:flex-start;">
@@ -159,9 +158,9 @@
         </div>
 
         <div class="sidebar-footer">
-            <button class="nav-item" id="userMenuButton">
-                <span class="material-symbols-outlined">settings</span>
-                <span class="text">Configurações</span>
+            <button class="nav-item" id="theme-toggle-btn">
+                <span class="material-symbols-outlined" id="theme-icon">settings</span>
+                <span class="text" id="theme-text">Configurações</span>
             </button>
             <div class="location-info">
                 Fortaleza, CE
@@ -230,13 +229,6 @@
         </div>
     </main>
 
-    <script src="script.js?v=crm_validation"></script>
+    <script src="script.js?v=crm_validation_gemini_theme"></script>
 </body>
 </html>
-
-
-
-
-
-
-
