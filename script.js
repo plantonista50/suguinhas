@@ -427,12 +427,60 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ============================================================
-    // SELETOR DE TEMA (NATAL / PADRÃO)
+    // SELETOR DE TEMA (NATAL / PADRÃO) + ANIMAÇÃO DE NEVE JS
     // ============================================================
     const themeBtn = document.getElementById('theme-toggle-btn');
     const themeIcon = document.getElementById('theme-icon');
     const themeText = document.getElementById('theme-text');
     let isXmas = false;
+
+    // Função que cria e anima flocos via JS (dura `duration` ms)
+    function startSnowJS({ duration = 5000, count = 80, sizeScale = 0.8 } = {}) {
+        const overlay = document.querySelector('.snow-overlay');
+        if (!overlay) return;
+        overlay.innerHTML = '';
+        overlay.style.opacity = '1';
+
+        const baseOriginal = 6; // referência anterior
+        const baseSize = baseOriginal * sizeScale; // reduzir 20% -> 4.8px
+
+        for (let i = 0; i < count; i++) {
+            const flake = document.createElement('div');
+            flake.className = 'snow-flake';
+
+            const randomFactor = 0.6 + Math.random() * 0.8; // variação entre 60% e 140%
+            const size = Math.max(1, baseSize * randomFactor);
+            flake.style.width = size + 'px';
+            flake.style.height = size + 'px';
+
+            // random horizontal position and slight vertical start offset
+            flake.style.left = (Math.random() * 100) + 'vw';
+            flake.style.top = (-5 - Math.random() * 20) + 'vh';
+
+            // opacity and slight scale
+            flake.style.opacity = (0.5 + Math.random() * 0.5).toString();
+
+            // small delay to spread start times but ensure overall duration ~ duration
+            const delay = (Math.random() * 0.4).toFixed(2);
+            flake.style.animation = `fall-js ${duration}ms linear ${delay}s forwards`;
+
+            overlay.appendChild(flake);
+        }
+
+        // Cleanup after the animation ends
+        setTimeout(() => { overlay.innerHTML = ''; overlay.style.opacity = ''; }, duration + 600);
+    }
+
+    // Observa mudanças de classe no body para automaticamente disparar a neve
+    const bodyObserver = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            if (m.attributeName === 'class') {
+                const active = document.body.classList.contains('xmas-mode');
+                if (active) startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
+            }
+        }
+    });
+    bodyObserver.observe(document.body, { attributes: true });
 
     if (themeBtn) {
         themeBtn.addEventListener('click', () => {
@@ -442,10 +490,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isXmas) {
                 themeIcon.textContent = 'ac_unit'; // Ícone de floco de neve
                 themeText.textContent = 'Modo Natal';
-                themeBtn.style.color = '#ffd700'; // Dourado
+                themeBtn.style.color = 'var(--accent-color)';
+                // dispara a animação via JS (50% mais flocos, tamanho reduzido 20%)
+                startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
             } else {
                 themeIcon.textContent = 'settings'; // Ícone original
-                themeText.textContent = 'Configurações';
+                themeText.textContent = 'Modo Dark';
                 themeBtn.style.color = ''; // Volta ao padrão
             }
         });
