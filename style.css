@@ -138,6 +138,13 @@ body {
 .chat-history { flex-grow: 1; overflow-y: auto; padding: 20px 15px 120px 15px; display: flex; flex-direction: column; align-items: center; width: 100%; }
 .welcome-screen { margin-top: 15vh; text-align: center; color: var(--text-secondary); padding: 0 20px; }
 .welcome-screen h1 { font-weight: 500; font-size: 2.5rem; margin-top: 15px; line-height: 1.2; letter-spacing: -0.02em; }
+
+/* Container do ícone circular da IA - permite sobrepor a guirlanda */
+.gemini-icon { position: relative; display: inline-block; }
+.gemini-icon #guirlanda { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 140px; height: 140px; pointer-events: none; z-index: 102; filter: drop-shadow(0 8px 12px rgba(0,0,0,0.25)); }
+
+/* Mostrar guirlanda apenas no modo Natal */
+body.xmas-mode .gemini-icon #guirlanda { display: block; }
 .message-wrapper { width: 100%; max-width: 800px; margin-bottom: 25px; display: flex; gap: 12px; }
 .message-wrapper.user { justify-content: flex-end; }
 .avatar-icon { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75rem; }
@@ -335,5 +342,117 @@ body.xmas-mode .sidebar-footer button {
         width: 250px;
         height: 250px;
         top: -20px;
+    }
+}
+
+/* =====================
+   Snowfall animation (runs 5s when xmas-mode is added)
+   ===================== */
+.snow-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 140; /* above most UI but below modal overlays */
+    overflow: hidden;
+    opacity: 0;
+}
+
+/* Use ::before to create many snowflakes via box-shadow */
+.snow-overlay::before {
+    content: "";
+    position: absolute;
+    top: -10%;
+    left: 0;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    filter: blur(0.6px);
+    /* a spread of flakes across the viewport using vw/vh offsets */
+    box-shadow:
+        5vw 10vh 1px rgba(255,255,255,0.95),
+        12vw 5vh 1px rgba(255,255,255,0.9),
+        20vw 18vh 1px rgba(255,255,255,0.9),
+        28vw 8vh 1px rgba(255,255,255,0.9),
+        36vw 25vh 1px rgba(255,255,255,0.9),
+        44vw 12vh 1px rgba(255,255,255,0.95),
+        52vw 30vh 1px rgba(255,255,255,0.9),
+        60vw 15vh 1px rgba(255,255,255,0.95),
+        68vw 22vh 1px rgba(255,255,255,0.9),
+        76vw 6vh 1px rgba(255,255,255,0.95),
+        84vw 28vh 1px rgba(255,255,255,0.9),
+        92vw 16vh 1px rgba(255,255,255,0.95),
+        10vw 40vh 1px rgba(255,255,255,0.9),
+        18vw 45vh 1px rgba(255,255,255,0.9),
+        26vw 55vh 1px rgba(255,255,255,0.9),
+        34vw 48vh 1px rgba(255,255,255,0.9),
+        42vw 62vh 1px rgba(255,255,255,0.9),
+        50vw 52vh 1px rgba(255,255,255,0.9),
+        58vw 68vh 1px rgba(255,255,255,0.9),
+        66vw 58vh 1px rgba(255,255,255,0.9),
+        74vw 70vh 1px rgba(255,255,255,0.9),
+        82vw 50vh 1px rgba(255,255,255,0.9),
+        90vw 60vh 1px rgba(255,255,255,0.9);
+    transform: translateY(-10%);
+    opacity: 0;
+}
+
+/* When entering xmas-mode, trigger the 5s fall animation */
+body.xmas-mode .snow-overlay { opacity: 1; }
+body.xmas-mode .snow-overlay::before {
+    animation: snowFall 5s linear forwards;
+}
+
+@keyframes snowFall {
+    0% {
+        transform: translateY(-10%);
+        opacity: 1;
+    }
+    70% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(120%);
+        opacity: 0;
+    }
+}
+
+/* Make the effect lighter on small screens */
+@media (max-width: 768px) {
+    .snow-overlay::before { box-shadow: 
+        5vw 5vh 1px rgba(255,255,255,0.95),
+        20vw 10vh 1px rgba(255,255,255,0.9),
+        35vw 8vh 1px rgba(255,255,255,0.9),
+        50vw 12vh 1px rgba(255,255,255,0.9),
+        70vw 6vh 1px rgba(255,255,255,0.9),
+        90vw 14vh 1px rgba(255,255,255,0.9);
+        }
+}
+
+/* Hide the previous pseudo-element-based snowfall (we'll use JS-generated flakes) */
+.snow-overlay::before { display: none !important; }
+
+/* Snowflake elements created via JS */
+.snow-flake {
+    position: absolute;
+    top: 0;
+    pointer-events: none;
+    border-radius: 50%;
+    /* 80% azul-pálido seguido de 20% branco para melhor visibilidade;
+       aumentei contraste do azul em ~20% (hex mais saturado) */
+    background: radial-gradient(circle at 30% 30%, #c0e8ff 0%, #c0e8ff 80%, #ffffff 100%);
+    /* sombra mais forte para destaque */
+    box-shadow: 0 1px 3px rgba(140,180,255,0.9), inset 0 0 1px rgba(255,255,255,0.8);
+    filter: blur(0.3px);
+    will-change: transform, opacity;
+}
+
+@keyframes fall-js {
+    0% {
+        transform: translateY(0) rotate(0deg) translateX(0);
+        opacity: 1;
+    }
+    70% { opacity: 1; }
+    100% {
+        transform: translateY(120vh) rotate(360deg) translateX(30px);
+        opacity: 0;
     }
 }
