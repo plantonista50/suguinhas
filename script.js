@@ -1,318 +1,503 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    console.log("🚀 SCRIPT INICIADO: MODO PRODUÇÃO (Nuclear Edition)");
-
-    // ============================================================
-    // ⚙️ CONFIGURAÇÕES GERAIS (EDITE AQUI)
-    // ============================================================
-    
-    // 👇 URL DE PRODUÇÃO CORRIGIDA (Apenas o domínio base)
-    const BASE_N8N_URL = "https://n8n-n8n.zvu2si.easypanel.host";
-
-    // URLs DOS ENDPOINTS (Geradas automaticamente)
-    const AUTH_WEBHOOK = `${BASE_N8N_URL}/webhook/suga-auth`;
-    const CHAT_WEBHOOK = `${BASE_N8N_URL}/webhook/suga-chat-secure`;
-
-    // FERRAMENTAS
-    const TOOLS = {
-        prontuario: { 
-            title: "SuGa PRONTUÁRIO", 
-            // ID original do seu fluxo de prontuário
-            webhook: `${BASE_N8N_URL}/webhook/cfadce39-4d13-4a1e-ac7d-24ed345a5e9c`, 
-            placeholder: "Digite ou anexe áudio/texto para o prontuário...",
-            mode: "processamento" 
-        },
-        examinator: { 
-            title: "SuGa EXAMINATOR", 
-            // Slug definido no fluxo Examintator
-            webhook: `${BASE_N8N_URL}/webhook/processar-exame`, 
-            placeholder: "Anexe exames (PDF/Imagem) para análise...",
-            mode: "processamento"
-        }
-    };
-
-    // --- ESTADO ---
+    // --- ESTADO GLOBAL ---
     let currentTool = 'prontuario'; 
     let selectedFiles = []; 
-    let currentUser = null; 
-    let currentSessionId = null;  
-    let currentContextText = null;
+    let currentUser = null;
+    let recorder = null; 
+    let isRecording = false;
 
-    // INDICADOR VISUAL (Produção - Verde)
-    const badge = document.createElement('div');
-    badge.innerHTML = "✅ AMBIENTE SEGURO (PROD)";
-    badge.style.cssText = "position:fixed; top:0; left:50%; transform:translateX(-50%); background:#2e7d32; color:white; font-size:10px; padding:2px 10px; z-index:9999; border-radius:0 0 8px 8px; font-weight:600; box-shadow:0 2px 10px rgba(0,0,0,0.2); letter-spacing: 0.5px;";
-    document.body.appendChild(badge);
+    // --- CONFIGURAÇÃO ---
+    const USE_REAL_BACKEND = true; 
+    const AUTH_WEBHOOK = "https://n8n-n8n.zvu2si.easypanel.host/webhook/suga-auth"; 
 
-    // ============================================================
-    // 1. UTILITÁRIOS
-    // ============================================================
+    // DOM ELEMENTS
     const loginScreen = document.getElementById('login-screen');
     const loginForm = document.getElementById('login-form');
+    const signupModal = document.getElementById('signup-modal');
+    const forgotModal = document.getElementById('forgot-modal');
+    const forgotStep1 = document.getElementById('forgot-step-1');
+    const forgotStep2 = document.getElementById('forgot-step-2');
     const userInitialsDisplay = document.getElementById('user-initials');
 
-    function generateUUID() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
+    // ============================================================
+    // 1. DETECTOR DE URL (Login Mágico)
+    // ============================================================
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+        console.log("Link de autenticação detectado!");
+        const params = new URLSearchParams(hash.substring(1)); 
+        const accessToken = params.get('access_token');
+        const type = params.get('type'); 
+
+        if (accessToken) {
+            currentUser = { email: "Verificado", token: accessToken };
+            window.history.replaceState(null, null, window.location.pathname);
+
+            if (type === 'recovery') {
+                alert("🔔 Link aceito! Agora defina sua nova senha.");
+                loginScreen.style.display = 'none';
+                forgotModal.style.display = 'flex';
+                if(forgotStep1) forgotStep1.style.display = 'none';
+                if(forgotStep2) forgotStep2.style.display = 'block';
+            } else {
+                alert("✅ E-mail confirmado! Você está logado.");
+                loginScreen.style.display = 'none';
+                if(userInitialsDisplay) {
+                    userInitialsDisplay.textContent = "OK";
+                    userInitialsDisplay.style.backgroundColor = '#4caf50';
+                }
+            }
+        }
+    }
+
+    // ============================================================
+    // 2. LÓGICA DE CADASTRO COM CRM VALIDADO
+    // ============================================================
+    const signupForm = document.getElementById('signup-form');
+    
+    // Elementos da Etapa 1 (Termos)
+    const step1Div = document.getElementById('step-1-legal');
+    const legalBox = document.getElementById('legal-text-content');
+    const termsCheckbox = document.getElementById('signup-terms');
+    const termsLabel = document.getElementById('label-terms');
+    const btnNextStep = document.getElementById('btn-next-step');
+    
+    // Elementos da Etapa 2 (Formulário)
+    const step2Div = document.getElementById('step-2-form');
+    const modalTitle = document.getElementById('signup-title');
+    const btnBack = document.getElementById('btn-back-step');
+
+    // DETECTOR DE SCROLL (Obrigatório)
+    if (legalBox) {
+        legalBox.addEventListener('scroll', function() {
+            if (this.scrollTop + this.clientHeight >= this.scrollHeight - 20) {
+                if (termsCheckbox.disabled) {
+                    termsCheckbox.disabled = false;
+                    termsCheckbox.style.cursor = 'pointer';
+                    termsLabel.style.opacity = '1';
+                    termsLabel.style.cursor = 'pointer';
+                }
+            }
+        });
+    }
+
+    // LIBERAR BOTÃO "CONTINUAR"
+    if (termsCheckbox) {
+        termsCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                btnNextStep.disabled = false;
+                btnNextStep.style.opacity = '1';
+                btnNextStep.style.cursor = 'pointer';
+            } else {
+                btnNextStep.disabled = true;
+                btnNextStep.style.opacity = '0.5';
+                btnNextStep.style.cursor = 'not-allowed';
+            }
+        });
+    }
+
+    // NAVEGAÇÃO ENTRE ETAPAS
+    if (btnNextStep) {
+        btnNextStep.addEventListener('click', () => {
+            step1Div.style.display = 'none';
+            step2Div.style.display = 'block';
+            modalTitle.textContent = "Seus Dados";
+        });
+    }
+
+    if (btnBack) {
+        btnBack.addEventListener('click', () => {
+            step2Div.style.display = 'none';
+            step1Div.style.display = 'block';
+            modalTitle.textContent = "Boas-vindas";
+        });
+    }
+
+    // SUBMIT FINAL (CADASTRO)
+    if (signupForm) {
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!termsCheckbox || !termsCheckbox.checked) {
+                return alert("Erro: Diretrizes não aceitas.");
+            }
+
+            const name = document.getElementById('signup-name').value;
+            let crm = document.getElementById('signup-crm').value; // Pega o valor
+            const email = document.getElementById('signup-email').value;
+            const pass = document.getElementById('signup-pass').value;
+            const confirm = document.getElementById('signup-confirm').value;
+            
+            // --- VALIDAÇÃO DE CRM (Regra: Números + 2 Letras) ---
+            // Remove espaços extras
+            crm = crm.trim().toUpperCase(); 
+            // Regex: Inicia com digitos (\d+), termina com exatas 2 letras ([A-Z]{2})
+            const crmRegex = /^\d+[A-Z]{2}$/;
+
+            if (!crmRegex.test(crm)) {
+                return alert("O CRM deve conter apenas números seguidos da sigla do estado (ex: 1234CE).");
+            }
+            // ----------------------------------------------------
+
+            if (pass !== confirm) return alert("Senhas não conferem.");
+            if (!name) return alert("Preencha o Nome Completo.");
+            
+            const btn = document.getElementById('btn-signup-final');
+            const originalText = btn.textContent;
+            btn.textContent = "Validando..."; btn.disabled = true;
+
+            try {
+                // ENVIA O CAMPO 'name' E 'crm' PARA O N8N
+                const response = await fetch(AUTH_WEBHOOK, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'signup', 
+                        email: email, 
+                        password: pass,
+                        name: name,
+                        crm: crm // Envia o CRM já formatado
+                    })
+                });
+                let data = await response.json();
+                if (Array.isArray(data)) data = data[0];
+
+                if (data.user || data.id || (data.role === 'authenticated')) {
+                    alert("Cadastro realizado com segurança! Verifique seu e-mail.");
+                    signupModal.style.display = 'none';
+                    signupForm.reset();
+                    // Reseta o modal
+                    step2Div.style.display = 'none';
+                    step1Div.style.display = 'block';
+                    termsCheckbox.checked = false;
+                    termsCheckbox.disabled = true; 
+                    btnNextStep.disabled = true;
+                } else {
+                    alert("Erro: " + (data.msg || "Falha no cadastro"));
+                }
+            } catch (e) { alert("Erro de conexão."); }
+            btn.textContent = originalText; btn.disabled = false;
         });
     }
 
     // ============================================================
-    // 2. LOGIN (ROBUSTO)
+    // 3. RESTANTE DO CÓDIGO (LOGIN, ESQUECI SENHA, CHAT...)
     // ============================================================
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            console.log("👉 Botão Login Clicado");
+    
+    // Login
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const btn = loginForm.querySelector('button');
+        const originalBtnText = btn.textContent;
+        btn.textContent = "Autenticando..."; btn.disabled = true;
 
-            const emailInput = document.getElementById('email');
-            const passInput = document.getElementById('password');
-            const btn = loginForm.querySelector('button');
-            const originalText = btn.textContent;
-
-            const email = emailInput.value;
-            const password = passInput.value;
-
-            btn.textContent = "Validando Credenciais..."; 
-            btn.disabled = true;
-
+        if(USE_REAL_BACKEND) {
             try {
                 const response = await fetch(AUTH_WEBHOOK, {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'login', email, password })
                 });
-                
                 let data = await response.json();
                 if (Array.isArray(data)) data = data[0]; 
 
                 if (data && data.access_token) {
-                    currentUser = { 
-                        email: data.user.email, 
-                        token: data.access_token,
-                        id: data.user.id 
-                    };
+                    currentUser = { email: data.user.email, token: data.access_token };
+                    // Pega metadados ou email
+                    let displayName = data.user.user_metadata?.full_name || data.user.email || "MD";
+                    const initials = displayName.substring(0,2).toUpperCase();
                     
                     if(userInitialsDisplay) {
-                        userInitialsDisplay.textContent = "MD";
+                        userInitialsDisplay.textContent = initials;
                         userInitialsDisplay.style.backgroundColor = '#4caf50';
                     }
-                    
                     loginScreen.style.opacity = '0';
                     setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
                 } else {
-                    alert("Acesso Negado: " + (data.msg || data.message || "Verifique e-mail e senha."));
+                    // Captura 'msg' (seu n8n), 'message' (Supabase/Auth) ou 'error_description' (Padrão OAuth)
+                    const errorMsg = data.msg || data.message || data.error_description || "Credenciais inválidas.";
+                    alert("Erro: " + errorMsg);
                 }
-            } catch (err) { 
-                console.error(err);
-                alert("Erro de conexão com o servidor de autenticação.");
-            }
-            btn.textContent = originalText; 
-            btn.disabled = false;
+            } catch (err) { alert("Erro de conexão."); } 
+        } 
+        btn.textContent = originalBtnText; btn.disabled = false;
+    });
+
+    // Esqueci Senha (Passo 1)
+    if (forgotStep1) {
+        forgotStep1.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            const btn = forgotStep1.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = "Enviando..."; btn.disabled = true;
+            try {
+                await fetch(AUTH_WEBHOOK, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'forgot', email: email })
+                });
+                alert("Se o e-mail existir, você receberá um link.");
+                forgotModal.style.display = 'none';
+                forgotStep1.reset();
+            } catch (e) { alert("Erro de conexão."); }
+            btn.textContent = originalText; btn.disabled = false;
         });
     }
 
-    // ============================================================
-    // 3. LÓGICA DO CHAT E ANEXOS
-    // ============================================================
+    // Esqueci Senha (Passo 2)
+    if (forgotStep2) {
+        forgotStep2.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPass = document.getElementById('new-pass').value;
+            if(newPass.length < 6) return alert("Mínimo 6 caracteres.");
+            const btn = forgotStep2.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = "Salvando..."; btn.disabled = true;
+            try {
+                const response = await fetch(AUTH_WEBHOOK, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update_password', password: newPass, token: currentUser.token })
+                });
+                const data = await response.json();
+                if (data.id || data.email) {
+                    alert("Senha alterada! Faça login.");
+                    forgotModal.style.display = 'none';
+                    loginScreen.style.display = 'flex'; 
+                } else { alert("Erro ao atualizar senha."); }
+            } catch (error) { alert("Erro de conexão."); }
+            btn.textContent = originalText; btn.disabled = false;
+        });
+    }
+
+    // Controle de Modais
+    const linkSignup = document.getElementById('link-signup');
+    const linkForgot = document.getElementById('link-forgot');
+    const closeButtons = document.querySelectorAll('.close-modal');
+    if(linkSignup) linkSignup.addEventListener('click', (e) => { e.preventDefault(); signupModal.style.display = 'flex'; });
+    if(linkForgot) linkForgot.addEventListener('click', (e) => { e.preventDefault(); forgotModal.style.display = 'flex'; });
+    closeButtons.forEach(btn => { btn.addEventListener('click', () => { if(signupModal) signupModal.style.display='none'; if(forgotModal) forgotModal.style.display='none'; }); });
+
+    // Chat e Sidebar
+    const TOOLS = {
+        prontuario: { title: "SuGa PRONTUÁRIO", webhook: "https://n8n-n8n.zvu2si.easypanel.host/webhook/cfadce39-4d13-4a1e-ac7d-24ed345a5e9c", placeholder: "Digite a transcrição do áudio ou anexe arquivos..." },
+        examinator: { title: "SuGa EXAMINATOR", webhook: "https://n8n-n8n.zvu2si.easypanel.host/webhook/processar-exame", placeholder: "Anexe os exames (PDF/Imagem) para análise..." },
+        //brainstorm: { title: "SuGa BRAINSTORM", webhook: "https://n8n-n8n-start.zvu2si.easypanel.host/webhook/suga-brainstorm", placeholder: "Descreva o caso clínico..." }
+    };
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const desktopMenuToggle = document.getElementById('desktop-sidebar-toggle');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mainTitle = document.getElementById('main-title');
+    const navItems = document.querySelectorAll('.nav-item[data-tool]');
+    const btnNewChat = document.getElementById('btn-new-chat');
     const chatHistory = document.getElementById('chat-history');
+    const welcomeScreen = document.getElementById('welcome-screen');
     const chatInput = document.getElementById('chat-input');
     const btnSend = document.getElementById('btn-send');
-    const btnAttachment = document.getElementById('btn-attachment'); 
-    const hiddenFileInput = document.getElementById('hidden-file-input'); 
-    const fileListContainer = document.getElementById('file-list-container'); 
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const navItems = document.querySelectorAll('.nav-item[data-tool]');
-    const mainTitle = document.getElementById('main-title');
+    const btnAttachment = document.getElementById('btn-attachment');
+    const btnMic = document.getElementById('btn-mic');
+    const hiddenFileInput = document.getElementById('hidden-file-input');
+    const fileListContainer = document.getElementById('file-list-container');
 
-    // --- A. Troca de Ferramenta ---
-    navItems.forEach(item => { 
-        item.addEventListener('click', () => { 
-            navItems.forEach(nav => nav.classList.remove('active'));
-            item.classList.add('active');
-            
-            const toolId = item.getAttribute('data-tool');
-            currentTool = toolId;
-            
-            if(mainTitle) mainTitle.textContent = TOOLS[toolId].title;
-            if(chatInput) chatInput.placeholder = TOOLS[toolId].placeholder;
-            
-            clearChat();
-        }); 
-    });
+    function toggleMobileMenu() { sidebar.classList.toggle('mobile-open'); sidebarOverlay.classList.toggle('active'); }
+    function closeMobileMenu() { sidebar.classList.remove('mobile-open'); sidebarOverlay.classList.remove('active'); }
+    function toggleDesktopMenu() { sidebar.classList.toggle('collapsed'); }
 
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    if (desktopMenuToggle) desktopMenuToggle.addEventListener('click', toggleDesktopMenu);
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeMobileMenu);
+    navItems.forEach(item => { item.addEventListener('click', () => { const toolId = item.getAttribute('data-tool'); setActiveTool(toolId); if (window.innerWidth <= 768) closeMobileMenu(); }); });
+    if(btnNewChat) btnNewChat.addEventListener('click', clearChat);
+
+    function setActiveTool(toolId) {
+        navItems.forEach(nav => nav.classList.remove('active'));
+        const activeNav = document.querySelector(`.nav-item[data-tool="${toolId}"]`);
+        if(activeNav) activeNav.classList.add('active');
+        currentTool = toolId;
+        mainTitle.textContent = TOOLS[toolId].title;
+        chatInput.placeholder = TOOLS[toolId].placeholder;
+        clearChat();
+    }
     function clearChat() {
-        if(!chatHistory) return;
         chatHistory.querySelectorAll('.message-wrapper').forEach(msg => msg.remove());
-        if(welcomeScreen) welcomeScreen.style.display = 'block';
-        if(chatInput) chatInput.value = ''; 
-        resetFileInput(); 
-        currentSessionId = null;
-        currentContextText = null;
+        welcomeScreen.style.display = 'block';
+        resetFileInput(); chatInput.value = ''; chatInput.style.height = 'auto';
     }
 
-    // --- B. Lógica de Anexos ---
-    if (btnAttachment && hiddenFileInput) {
-        btnAttachment.addEventListener('click', () => {
-            hiddenFileInput.click();
-        });
-
-        hiddenFileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                selectedFiles = [...selectedFiles, ...Array.from(e.target.files)].slice(0, 10);
-                renderFileList();
-                hiddenFileInput.value = ''; 
-            }
-        });
-    }
-
-    function renderFileList() {
-        if (!fileListContainer) return;
-        
-        fileListContainer.innerHTML = ''; 
-        
-        if (selectedFiles.length > 0) {
-            fileListContainer.style.display = 'flex';
-            
-            selectedFiles.forEach((file, index) => {
-                const chip = document.createElement('div'); 
-                chip.className = 'file-chip';
-                chip.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.1rem">description</span> <span class="file-name">${file.name}</span> <span class="material-symbols-outlined remove-btn" style="cursor:pointer; margin-left:5px; font-size:1rem;">close</span>`;
-                
-                chip.querySelector('.remove-btn').addEventListener('click', (e) => {
-                    e.stopPropagation(); 
-                    selectedFiles.splice(index, 1); 
-                    renderFileList(); 
-                });
-                
-                fileListContainer.appendChild(chip);
-            });
-        } else {
-            fileListContainer.style.display = 'none';
-        }
-    }
-
-    function resetFileInput() { 
-        selectedFiles = []; 
-        renderFileList(); 
-    }
-
-    // --- C. Envio de Mensagem ---
-    if (btnSend && chatInput) {
-        const handleSend = async () => {
-            const text = chatInput.value.trim();
-            
-            // Só envia se tiver texto OU arquivo
-            if (!text && selectedFiles.length === 0) return;
-
-            if(welcomeScreen) welcomeScreen.style.display = 'none';
-
-            // 1. Renderiza msg do usuário
-            const userDiv = document.createElement('div'); 
-            userDiv.className = 'message-wrapper user';
-            
-            let htmlContent = '';
-            if(selectedFiles.length > 0) {
-                htmlContent += selectedFiles.map(f => `<div style="font-size:0.8rem;color:#a8c7fa;margin-bottom:4px">📎 ${f.name}</div>`).join('');
-            }
-            if(text) {
-                htmlContent += `<div>${text.replace(/\n/g,'<br>')}</div>`;
-            }
-
-            userDiv.innerHTML = `<div class="message-content">${htmlContent}</div><div class="avatar-icon user">VC</div>`;
-            chatHistory.appendChild(userDiv);
-
-            // Limpa inputs
-            chatInput.value = '';
-            const filesToSend = [...selectedFiles]; 
-            resetFileInput(); 
-
-            // 2. Loader
-            const ldId = 'ld-'+Date.now();
-            const ldDiv = document.createElement('div'); 
-            ldDiv.className = 'message-wrapper ai'; 
-            ldDiv.id = ldId;
-            ldDiv.innerHTML = `<div class="avatar-icon ai">🤖</div><div class="message-content">Processando...</div>`;
-            chatHistory.appendChild(ldDiv);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-
-            // 3. Prepara Dados
-            const formData = new FormData();
-            const userEmail = currentUser ? currentUser.email : "anonimo@teste.com";
-            const userId = currentUser ? currentUser.id : "anonimo_id";
-
-            // Lógica de Decisão:
-            const isProcessing = (filesToSend.length > 0) || !currentContextText;
-            
-            let targetUrl = isProcessing ? TOOLS[currentTool].webhook : CHAT_WEBHOOK;
-
-            if (isProcessing) {
-                currentSessionId = generateUUID(); // Nova sessão para novo exame
-                // Anexa arquivos
-                filesToSend.forEach((f, i) => {
-                    formData.append(`file_${i}`, f); 
-                    if(i===0) formData.append('file', f); // Fallback
-                });
-                
-                if(text) formData.append('textoBruto', text);
-                formData.append('user_email', userEmail);
-                formData.append('session_id', currentSessionId);
-            } else {
-                formData.append('user_message', text);
-                formData.append('session_id', currentSessionId);
-                formData.append('user_id', userId);
-                formData.append('context_text', currentContextText);
-            }
-
+    if (btnMic) btnMic.addEventListener('click', async () => {
+        if (!isRecording) {
             try {
-                const res = await fetch(targetUrl, { method: 'POST', body: formData });
-                const data = await res.json();
-                
-                let aiText = "";
-                if (isProcessing) {
-                    const rawText = data.resumoCompleto || data.text || data.message || "";
-                    currentContextText = rawText; // Salva o contexto para o chat
-                    aiText = rawText;
-                } else {
-                    aiText = data.reply || data.message || "Sem resposta.";
-                }
-
-                if (!aiText && data.length) aiText = JSON.stringify(data);
-                if (!aiText) aiText = "Procedimento concluído, mas sem retorno de texto.";
-
-                document.getElementById(ldId)?.remove();
-                
-                const aiDiv = document.createElement('div'); 
-                aiDiv.className = 'message-wrapper ai';
-                aiDiv.innerHTML = `<div class="avatar-icon ai">🤖</div><div class="message-content"><pre>${aiText}</pre></div>`;
-                chatHistory.appendChild(aiDiv);
-
-            } catch (e) {
-                document.getElementById(ldId)?.remove();
-                console.error(e);
-                const errDiv = document.createElement('div'); 
-                errDiv.className = 'message-wrapper ai';
-                errDiv.innerHTML = `<div class="avatar-icon ai">⚠️</div><div class="message-content">Erro de Processamento: ${e.message}</div>`;
-                chatHistory.appendChild(errDiv);
-            }
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-        };
-
-        btnSend.addEventListener('click', handleSend);
-        chatInput.addEventListener('keydown', (e) => {
-            if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-        });
-    }
-
-    // ============================================================
-    // 4. FECHAR MODAIS
-    // ============================================================
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.modal-overlay').forEach(modal => modal.style.display = 'none');
-        });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                if (typeof RecordRTC === 'undefined') return alert("Erro: Biblioteca RecordRTC não carregada.");
+                recorder = new RecordRTC(stream, { type: 'audio', mimeType: 'audio/wav', recorderType: RecordRTC.StereoAudioRecorder, numberOfAudioChannels: 1, desiredSampRate: 16000 });
+                recorder.startRecording();
+                isRecording = true;
+                btnMic.classList.add('recording');
+                btnMic.querySelector('span').textContent = 'stop_circle';
+                chatInput.placeholder = "Gravando (WAV)...";
+            } catch (e) { alert("Erro ao acessar microfone."); }
+        } else {
+            recorder.stopRecording(() => {
+                const file = new File([recorder.getBlob()], `gravacao_${Date.now()}.wav`, { type: 'audio/wav' });
+                selectedFiles.push(file);
+                renderFileList();
+                isRecording = false;
+                btnMic.classList.remove('recording');
+                btnMic.querySelector('span').textContent = 'mic';
+                chatInput.placeholder = TOOLS[currentTool].placeholder;
+                recorder.getInternalRecorder().blob = null; recorder.camera.stop(); 
+            });
+        }
     });
 
-});
+    btnAttachment.addEventListener('click', () => hiddenFileInput.click());
+    hiddenFileInput.addEventListener('change', (e) => { selectedFiles = [...selectedFiles, ...Array.from(e.target.files)].slice(0, 10); renderFileList(); hiddenFileInput.value = ''; });
+    function renderFileList() {
+        fileListContainer.innerHTML = '';
+        fileListContainer.style.display = selectedFiles.length ? 'flex' : 'none';
+        selectedFiles.forEach((file, index) => {
+            const chip = document.createElement('div'); chip.className = 'file-chip';
+            const icon = (file.type.includes('audio') || file.name.endsWith('.wav')) ? 'mic' : 'description';
+            chip.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.1rem">${icon}</span> <span class="file-name">${file.name}</span> <button class="remove-btn" onclick="removeFile(${index})">&times;</button>`;
+            fileListContainer.appendChild(chip);
+        });
+        window.removeFile = idx => { selectedFiles.splice(idx, 1); renderFileList(); };
+    }
+    function resetFileInput() { selectedFiles = []; renderFileList(); }
 
+    btnSend.addEventListener('click', handleSend);
+    chatInput.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
+    chatInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; if(this.value==='') this.style.height='auto'; });
+
+    async function handleSend() {
+        if (isRecording) { 
+            recorder.stopRecording(() => {
+                const file = new File([recorder.getBlob()], `gravacao_${Date.now()}.wav`, { type: 'audio/wav' });
+                selectedFiles.push(file);
+                isRecording = false; btnMic.classList.remove('recording'); btnMic.querySelector('span').textContent='mic';
+                handleSend(); 
+            });
+            return;
+        }
+        const text = chatInput.value.trim();
+        if (!text && selectedFiles.length === 0) return;
+        welcomeScreen.style.display = 'none';
+        
+        const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper user';
+        let html = selectedFiles.map(f => `<div style="font-size:0.8rem;color:#a8c7fa;margin-bottom:4px">📎 ${f.name}</div>`).join('');
+        if(text) html += `<div>${text.replace(/\n/g,'<br>')}</div>`;
+        wrapper.innerHTML = `<div class="message-content">${html}</div><div class="avatar-icon user">VC</div>`;
+        chatHistory.appendChild(wrapper);
+        chatInput.value = ''; chatInput.style.height = 'auto';
+        const filesToSend = [...selectedFiles]; resetFileInput();
+        
+        const ldId = 'ld-'+Date.now();
+        const ldDiv = document.createElement('div'); ldDiv.className = 'message-wrapper ai'; ldDiv.id = ldId;
+        ldDiv.innerHTML = `<div class="avatar-icon ai"><span class="material-symbols-outlined">smart_toy</span></div><div class="message-content">...</div>`;
+        chatHistory.appendChild(ldDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        const formData = new FormData();
+        filesToSend.forEach((f, i) => formData.append(`file_${i}`, f));
+        if(text) formData.append('textoBruto', text);
+        const userEmail = currentUser ? currentUser.email : "anonimo_erro";
+        formData.append('user_email', userEmail); 
+
+        try {
+            const res = await fetch(TOOLS[currentTool].webhook, { method: 'POST', body: formData });
+            const data = await res.json();
+            // Se vier mensagem de erro do n8n, usa ela. Se não, tenta os campos padrão.
+            const aiText = data.message || data.msg || data.resumoCompleto || data.text || (data.length ? JSON.stringify(data) : "Processamento concluído.");
+            document.getElementById(ldId)?.remove();
+            const aiWrapper = document.createElement('div'); aiWrapper.className = 'message-wrapper ai';
+            aiWrapper.innerHTML = `<div class="avatar-icon ai"><span class="material-symbols-outlined">smart_toy</span></div><div class="message-content"><pre>${aiText}</pre><div style="text-align:right"><span class="material-symbols-outlined" style="cursor:pointer;color:#666" onclick="copyText(this)">content_copy</span></div></div>`;
+            chatHistory.appendChild(aiWrapper);
+        } catch (e) {
+            document.getElementById(ldId)?.remove();
+            const errDiv = document.createElement('div'); errDiv.className = 'message-wrapper ai';
+            errDiv.innerHTML = `<div class="avatar-icon ai">⚠️</div><div class="message-content">Erro ao processar.</div>`;
+            chatHistory.appendChild(errDiv);
+        }
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+    window.copyText = function(btn) {
+        const pre = btn.closest('.message-content').querySelector('pre');
+        navigator.clipboard.writeText(pre.textContent).then(() => { btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='#666',2000); });
+    };
+
+    // ============================================================
+    // SELETOR DE TEMA (NATAL / PADRÃO) + ANIMAÇÃO DE NEVE JS
+    // ============================================================
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    const themeIcon = document.getElementById('theme-icon');
+    const themeText = document.getElementById('theme-text');
+    let isXmas = false;
+
+    // Função que cria e anima flocos via JS (dura `duration` ms)
+    function startSnowJS({ duration = 5000, count = 80, sizeScale = 0.8 } = {}) {
+        const overlay = document.querySelector('.snow-overlay');
+        if (!overlay) return;
+        overlay.innerHTML = '';
+        overlay.style.opacity = '1';
+
+        const baseOriginal = 6; // referência anterior
+        const baseSize = baseOriginal * sizeScale; // reduzir 20% -> 4.8px
+
+        for (let i = 0; i < count; i++) {
+            const flake = document.createElement('div');
+            flake.className = 'snow-flake';
+
+            const randomFactor = 0.6 + Math.random() * 0.8; // variação entre 60% e 140%
+            const size = Math.max(1, baseSize * randomFactor);
+            flake.style.width = size + 'px';
+            flake.style.height = size + 'px';
+
+            // random horizontal position and slight vertical start offset
+            flake.style.left = (Math.random() * 100) + 'vw';
+            flake.style.top = (-5 - Math.random() * 20) + 'vh';
+
+            // opacity and slight scale
+            flake.style.opacity = (0.5 + Math.random() * 0.5).toString();
+
+            // small delay to spread start times but ensure overall duration ~ duration
+            const delay = (Math.random() * 0.4).toFixed(2);
+            flake.style.animation = `fall-js ${duration}ms linear ${delay}s forwards`;
+
+            overlay.appendChild(flake);
+        }
+
+        // Cleanup after the animation ends
+        setTimeout(() => { overlay.innerHTML = ''; overlay.style.opacity = ''; }, duration + 600);
+    }
+
+    // Observa mudanças de classe no body para automaticamente disparar a neve
+    const bodyObserver = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            if (m.attributeName === 'class') {
+                const active = document.body.classList.contains('xmas-mode');
+                if (active) startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
+            }
+        }
+    });
+    bodyObserver.observe(document.body, { attributes: true });
+
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            isXmas = !isXmas;
+            document.body.classList.toggle('xmas-mode');
+
+            if (isXmas) {
+                themeIcon.textContent = 'ac_unit'; // Ícone de floco de neve
+                themeText.textContent = 'Modo Natal';
+                themeBtn.style.color = 'var(--accent-color)';
+                // dispara a animação via JS (50% mais flocos, tamanho reduzido 20%)
+                startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
+            } else {
+                themeIcon.textContent = 'settings'; // Ícone original
+                themeText.textContent = 'Modo Dark';
+                themeBtn.style.color = ''; // Volta ao padrão
+            }
+        });
+    }
+});
