@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ⚙️ CONFIGURAÇÕES GERAIS (EDITE AQUI)
     // ============================================================
     
-    // 👇 COLE SUA URL DE PRODUÇÃO DO N8N AQUI (Sem a barra no final)
-    const BASE_N8N_URL = "https://https://n8n-n8n.zvu2si.easypanel.host/webhook/cfadce39-4d13-4a1e-ac7d-24ed345a5e9c.host"; 
+    // 👇 URL DE PRODUÇÃO CORRIGIDA (Apenas o domínio base)
+    const BASE_N8N_URL = "https://n8n-n8n.zvu2si.easypanel.host";
 
     // URLs DOS ENDPOINTS (Geradas automaticamente)
     const AUTH_WEBHOOK = `${BASE_N8N_URL}/webhook/suga-auth`;
@@ -315,3 +315,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 });
+
