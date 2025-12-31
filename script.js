@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Chat e Sidebar
     const TOOLS = {
-        prontuario: { title: "SuGa PRONTUÁRIO", webhook: "https://n8n-n8n.zvu2si.easypanel.host/webhook/cfadce39-4d13-4a1e-ac7d-24ed345a5e9c", placeholder: "Digite a transcrição do áudio ou anexe arquivos..." },
+        prontuario: { title: "SuGa PRONTUÁRIO", webhook: "https://n8n-n8n.zvu2si.easypanel.host/webhook/cfadce39-4d13-4a1e-ac7d-24ed345a5e9c", placeholder: "Digite a transcrição do áudio ou a história coletada..." },
         examinator: { title: "SuGa EXAMINATOR", webhook: "https://n8n-n8n.zvu2si.easypanel.host/webhook/processar-exame", placeholder: "Anexe os exames (PDF/Imagem) para análise..." },
         //brainstorm: { title: "SuGa BRAINSTORM", webhook: "https://n8n-n8n-start.zvu2si.easypanel.host/webhook/suga-brainstorm", placeholder: "Descreva o caso clínico..." }
     };
@@ -501,3 +501,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
