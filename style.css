@@ -8,6 +8,10 @@
     --accent-color: #a8c7fa;
     --user-msg-bg: #28292a;
     --border-color: #444746;
+    
+    /* VARIÁVEIS DO TEMA ANO NOVO (GOLD) */
+    --gold-gradient: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+    --gold-shadow: 0px 0px 5px rgba(255, 215, 0, 0.5);
 }
 
 * {
@@ -26,12 +30,15 @@ body {
     transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* --- TELA DE LOGIN --- */
+/* ============================================================
+   TELA DE LOGIN - TEMA ANO NOVO (NEW YEAR GOLD)
+   ============================================================ */
 .login-overlay {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background-color: var(--bg-color);
+    /* Fundo gradiente noturno para destacar o dourado */
+    background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
     z-index: 2000;
     display: flex;
     justify-content: center;
@@ -39,68 +46,124 @@ body {
     transition: opacity 0.5s ease;
 }
 
-/* --- MODAIS --- */
+/* Canvas da animação de fogos (inserido via JS) */
+#ny-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1; /* Fica atrás do box de login */
+}
+
+/* Box de Login Transformado */
+.login-box {
+    width: 90%; max-width: 400px; padding: 40px;
+    background-color: rgba(10, 10, 10, 0.85); /* Fundo escuro translúcido */
+    border-radius: 16px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    
+    /* Borda Dourada com Gradiente */
+    border: 2px solid transparent;
+    border-image: var(--gold-gradient);
+    border-image-slice: 1;
+    backdrop-filter: blur(5px);
+}
+
+/* Textos com efeito Glitter/Ouro */
+.login-logo span, 
+.login-logo h2,
+.login-box h3, /* Títulos de Modais */
+.modal-header h3 {
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: #ffd700; /* Fallback */
+    font-weight: 700;
+    text-shadow: 0px 0px 2px rgba(191, 149, 63, 0.3);
+    letter-spacing: 0.5px;
+}
+
+.login-logo span { margin-bottom: 10px; font-size: 3rem; display: block; }
+.login-logo h2 { font-size: 1.8rem; margin-bottom: 5px; }
+
+.login-box p { 
+    color: #e0c088; /* Dourado pálido */
+    font-size: 0.9rem; margin-bottom: 30px; 
+}
+
+/* Inputs no tema Gold */
+.input-group {
+    background-color: rgba(0, 0, 0, 0.6);
+    border: 1px solid #555;
+    border-radius: 8px; margin-bottom: 15px;
+    display: flex; align-items: center; padding: 0 10px;
+    transition: all 0.3s;
+}
+.input-group:focus-within { 
+    border-color: #bf953f; 
+    box-shadow: 0 0 10px rgba(191, 149, 63, 0.4);
+}
+.input-group span { color: #bf953f; } /* Ícone dourado */
+.input-group input { 
+    background: none; border: none; 
+    color: #fcf6ba; /* Texto digitado dourado claro */
+    width: 100%; padding: 12px; outline: none; font-size: 1rem; 
+}
+.input-group input::placeholder { color: #888; }
+
+/* Botão Gold Metálico */
+.login-btn {
+    width: 100%; padding: 12px;
+    background: var(--gold-gradient);
+    color: #1a1a1a; font-weight: bold;
+    border: none; border-radius: 8px;
+    cursor: pointer; font-size: 1rem;
+    margin-top: 10px; transition: transform 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.login-btn:hover { 
+    transform: scale(1.02);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+}
+.login-btn:disabled { 
+    background: #444; color: #888; cursor: not-allowed; opacity: 0.7; box-shadow: none;
+}
+
+/* Links (Esqueci senha / Cadastro) */
+.auth-options { display: flex; justify-content: space-between; margin-top: 20px; font-size: 0.85rem; }
+.auth-options a { 
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-decoration: none; font-weight: bold;
+    transition: 0.2s; 
+}
+.auth-options a:hover { text-shadow: 0 0 8px #bf953f; }
+
+.login-footer { margin-top: 30px; font-size: 0.75rem; color: #888 !important; opacity: 0.7; margin-bottom: 0 !important; }
+
+/* --- MODAIS (Mantendo consistência com o login) --- */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.85);
+    background-color: rgba(0,0,0,0.9); /* Fundo mais escuro */
     backdrop-filter: blur(5px);
     z-index: 2005;
     display: flex;
     justify-content: center;
     align-items: center;
 }
-
-.login-box {
-    width: 90%; max-width: 400px; padding: 40px;
-    background-color: var(--sidebar-bg);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    position: relative;
-}
-
 .modal-header {
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;
+    margin-bottom: 25px; border-bottom: 1px solid #bf953f; padding-bottom: 15px;
 }
-.modal-header h3 { font-weight: 500; color: var(--accent-color); }
-.close-modal { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; }
+.close-modal { background: none; border: none; color: #bf953f; font-size: 1.5rem; cursor: pointer; }
 
-.login-logo { margin-bottom: 20px; }
-.login-logo span { font-size: 3rem; color: var(--accent-color); display: block; margin-bottom: 10px; }
-.login-logo h2 { font-weight: 500; font-size: 1.5rem; }
-.login-box p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 30px; }
-
-.input-group {
-    background-color: var(--input-bg);
-    border-radius: 8px; margin-bottom: 15px;
-    display: flex; align-items: center; padding: 0 10px;
-    border: 1px solid transparent; transition: border 0.3s;
-}
-.input-group:focus-within { border-color: var(--accent-color); }
-.input-group span { color: var(--text-secondary); }
-.input-group input { background: none; border: none; color: inherit; width: 100%; padding: 12px; outline: none; font-size: 1rem; }
-
-.login-btn {
-    width: 100%; padding: 12px;
-    background-color: var(--accent-color);
-    color: #000; font-weight: bold;
-    border: none; border-radius: 8px;
-    cursor: pointer; font-size: 1rem;
-    margin-top: 10px; transition: 0.2s;
-}
-.login-btn:hover { background-color: #8ab4f8; }
-.login-btn:disabled { background-color: #444; color: #888; cursor: not-allowed; opacity: 0.7; }
-
-.auth-options { display: flex; justify-content: space-between; margin-top: 20px; font-size: 0.85rem; }
-.auth-options a { color: var(--text-secondary); text-decoration: none; transition: 0.2s; }
-.auth-options a:hover { color: var(--accent-color); }
-.login-footer { margin-top: 30px; font-size: 0.75rem; opacity: 0.5; margin-bottom: 0 !important; }
-
-/* --- SIDEBAR & MAIN CONTENT --- */
+/* --- SIDEBAR & MAIN CONTENT (Estilo Original Preservado) --- */
 .sidebar {
     width: 260px; background-color: var(--sidebar-bg);
     display: flex; flex-direction: column; padding: 10px;
@@ -138,25 +201,15 @@ body {
 .chat-history { flex-grow: 1; overflow-y: auto; padding: 20px 15px 120px 15px; display: flex; flex-direction: column; align-items: center; width: 100%; }
 .welcome-screen { margin-top: 15vh; text-align: center; color: var(--text-secondary); padding: 0 20px; }
 .welcome-screen h1 {
-    font-weight: 500;
-    font-size: 2.5rem;
-    margin-top: 15px;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    /* Degradê inspirado em IA: azul-petróleo, ciano, roxo, magenta */
+    font-weight: 500; font-size: 2.5rem; margin-top: 15px; line-height: 1.2; letter-spacing: -0.02em;
     background: linear-gradient(90deg, #0b57d0 0%, #00e6ff 40%, #a259ff 80%, #ff2e9a 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: transparent;
 }
 
-/* Container do ícone circular da IA - permite sobrepor a guirlanda */
 .gemini-icon { position: relative; display: inline-block; }
 .gemini-icon #guirlanda { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 140px; height: 140px; pointer-events: none; z-index: 102; filter: drop-shadow(0 8px 12px rgba(0,0,0,0.25)); }
-
-/* Mostrar guirlanda apenas no modo Natal */
 body.xmas-mode .gemini-icon #guirlanda { display: block; }
+
 .message-wrapper { width: 100%; max-width: 800px; margin-bottom: 25px; display: flex; gap: 12px; }
 .message-wrapper.user { justify-content: flex-end; }
 .avatar-icon { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75rem; }
@@ -198,45 +251,33 @@ body.xmas-mode .gemini-icon #guirlanda { display: block; }
 /* --- NOVOS ESTILOS DPA/LGPD --- */
 .legal-scroll-box {
     background-color: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--border-color);
+    border: 1px solid #bf953f; /* Gold border for legal box in modal */
     border-radius: 8px;
     padding: 15px;
     height: 150px;
     overflow-y: auto;
     text-align: left;
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: #e0c088;
     line-height: 1.6;
     margin-bottom: 10px;
-    border-left: 3px solid var(--accent-color);
+    border-left: 3px solid #b38728;
 }
-.legal-scroll-box strong { color: var(--text-primary); font-weight: 600; }
+.legal-scroll-box strong { color: #fcf6ba; font-weight: 600; }
 .legal-scroll-box::-webkit-scrollbar { width: 6px; }
 .legal-scroll-box::-webkit-scrollbar-track { background: transparent; }
-.legal-scroll-box::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+.legal-scroll-box::-webkit-scrollbar-thumb { background: #bf953f; border-radius: 3px; }
 
 .disclaimer-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    background-color: var(--sidebar-bg);
-    padding: 4px 12px;
-    border-radius: 12px;
-    max-width: 90%;
-    pointer-events: auto;
-    border: 1px solid var(--border-color);
+    display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.7rem; color: var(--text-secondary); background-color: var(--sidebar-bg); padding: 4px 12px; border-radius: 12px; max-width: 90%; pointer-events: auto; border: 1px solid var(--border-color);
 }
 .disclaimer-box .icon { font-size: 1rem; color: var(--text-secondary); }
 .disclaimer-box p { margin: 0; }
 
-/* ============================================================ */
-/* TEMA XMAS (MODO NATAL)                                       */
-/* ============================================================ */
+/* ============================================================
+   TEMA XMAS (MODO NATAL) - MANTIDO
+   ============================================================ */
 body.xmas-mode {
-    /* Paleta "Gemini Blue" (Branco/Azul Pálido) mantida */
     --bg-color: #FFFFFF;          
     --sidebar-bg: #F0F4F9;        
     --input-bg: #F0F4F9;          
@@ -245,246 +286,23 @@ body.xmas-mode {
     --accent-color: #0b57d0;      
     --user-msg-bg: #c2e7ff;       
     --border-color: #E0E3E7;      
-    
-    position: relative;
-    z-index: 0;
+    position: relative; z-index: 0;
 }
-
-/* --- Camada 1: Fundo com Flocos de Neve (Opacidade 10%) --- */
-body.xmas-mode::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    z-index: -2; /* Fica atrás de tudo */
-    pointer-events: none;
-    background-image: url('https://img.freepik.com/vetores-gratis/decoracao-de-natal-realista-3d-floco-de-neve-azul-isolada-em-fundo-transparente-elemento-de-design-para-o-natal_145391-1208.jpg?semt=ais_hybrid&w=740&q=80');
-    background-repeat: repeat;
-    background-size: 50px 50px;
-    opacity: 0.1; 
-}
-
-/* --- Camada 2: A Guirlanda Realista Centralizada --- */
-body.xmas-mode::after {
-    content: "";
-    position: fixed;
-    top: -40px; /* Ajuste para "pendurar" a guirlanda do topo */
-    left: 50%;
-    transform: translateX(-50%); /* Centraliza perfeitamente */
-    width: 400px; /* Largura da guirlanda */
-    height: 400px; /* Altura da guirlanda */
-    z-index: 101; /* Fica acima da sidebar (z-100) e do top-bar (z-10) */
-    pointer-events: none; /* IMPORTANTE: Permite clicar através dela */
-    
-    /* Imagem de Guirlanda Realista (Exemplo de URL pública) */
-    background-image: url('https://png.pngtree.com/png-clipart/20230408/ourmid/pngtree-christmas-wreath-holly-decoration-with-poinsettia-png-image_6691156.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center top;
-    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); /* Sombra para realismo */
-}
-
-/* Gradient Text para o título */
-body.xmas-mode .welcome-screen h1 {
-    font-weight: 500;
-    font-size: 2.5rem;
-    margin-top: 15px;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    /* Degradê IA para Natal: azul-petróleo, ciano, roxo, magenta */
-    background: linear-gradient(90deg, #0b57d0 0%, #00e6ff 40%, #a259ff 80%, #ff2e9a 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-    position: relative;
-    z-index: 102;
-}
-/* Títulos principais do modo padrão e xmas com degradê IA */
-.main-content h2,
-.main-content h3,
-body.xmas-mode .main-content h2,
-body.xmas-mode .main-content h3,
-.main-content .app-name {
-    background: linear-gradient(90deg, #0b57d0 0%, #00e6ff 40%, #a259ff 80%, #ff2e9a 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-    font-weight: 600;
-}
-
-/* Ícone da IA */
-body.xmas-mode .avatar-icon.ai {
-    background: linear-gradient(135deg, #4285F4, #9C27B0);
-    border: 1px solid #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-/* Botões */
-body.xmas-mode .nav-item.active,
-body.xmas-mode .login-btn {
-    background: linear-gradient(135deg, #d3e3fd 0%, #e8f0fe 100%);
-    color: #041e49;
-    font-weight: 600;
-    border: 1px solid #c2e7ff;
-}
-
-body.xmas-mode .new-chat-btn {
-    background-color: #d3e3fd;
-    color: #041e49;
-    border: none;
-}
-
-/* Ajustes de contraste tema claro */
-body.xmas-mode .login-box,
-body.xmas-mode .modal-box {
-    background-color: #ffffff;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    border: none;
-}
-
-body.xmas-mode .input-group, 
-body.xmas-mode .prompt-bar {
-    background-color: #f0f4f9;
-    border: 1px solid transparent;
-}
-body.xmas-mode .input-group input,
-body.xmas-mode .prompt-bar textarea {
-    color: #1f1f1f;
-}
-body.xmas-mode .prompt-bar:focus-within {
-    background-color: #ffffff;
-    border-color: #c2e7ff;
-    box-shadow: 0 2px 8px rgba(11, 87, 208, 0.15);
-}
-
-body.xmas-mode .badge-pro {
-    background: linear-gradient(90deg, #1967d2, #8ab4f8);
-    color: white;
-    border: none;
-}
-
-body.xmas-mode .sidebar-footer button {
-    color: #0b57d0;
-}
-
-/* Ajuste para telas menores - Guirlanda menor */
-@media (max-width: 768px) {
-    body.xmas-mode::after {
-        width: 250px;
-        height: 250px;
-        top: -20px;
-    }
-}
-
-/* =====================
-   Snowfall animation (runs 5s when xmas-mode is added)
-   ===================== */
-.snow-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 140; /* above most UI but below modal overlays */
-    overflow: hidden;
-    opacity: 0;
-}
-
-/* Use ::before to create many snowflakes via box-shadow */
-.snow-overlay::before {
-    content: "";
-    position: absolute;
-    top: -10%;
-    left: 0;
-    width: 6px; height: 6px; border-radius: 50%;
-    background: rgba(255,255,255,0.95);
-    filter: blur(0.6px);
-    /* a spread of flakes across the viewport using vw/vh offsets */
-    box-shadow:
-        5vw 10vh 1px rgba(255,255,255,0.95),
-        12vw 5vh 1px rgba(255,255,255,0.9),
-        20vw 18vh 1px rgba(255,255,255,0.9),
-        28vw 8vh 1px rgba(255,255,255,0.9),
-        36vw 25vh 1px rgba(255,255,255,0.9),
-        44vw 12vh 1px rgba(255,255,255,0.95),
-        52vw 30vh 1px rgba(255,255,255,0.9),
-        60vw 15vh 1px rgba(255,255,255,0.95),
-        68vw 22vh 1px rgba(255,255,255,0.9),
-        76vw 6vh 1px rgba(255,255,255,0.95),
-        84vw 28vh 1px rgba(255,255,255,0.9),
-        92vw 16vh 1px rgba(255,255,255,0.95),
-        10vw 40vh 1px rgba(255,255,255,0.9),
-        18vw 45vh 1px rgba(255,255,255,0.9),
-        26vw 55vh 1px rgba(255,255,255,0.9),
-        34vw 48vh 1px rgba(255,255,255,0.9),
-        42vw 62vh 1px rgba(255,255,255,0.9),
-        50vw 52vh 1px rgba(255,255,255,0.9),
-        58vw 68vh 1px rgba(255,255,255,0.9),
-        66vw 58vh 1px rgba(255,255,255,0.9),
-        74vw 70vh 1px rgba(255,255,255,0.9),
-        82vw 50vh 1px rgba(255,255,255,0.9),
-        90vw 60vh 1px rgba(255,255,255,0.9);
-    transform: translateY(-10%);
-    opacity: 0;
-}
-
-/* When entering xmas-mode, trigger the 5s fall animation */
+body.xmas-mode::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none; background-image: url('https://img.freepik.com/vetores-gratis/decoracao-de-natal-realista-3d-floco-de-neve-azul-isolada-em-fundo-transparente-elemento-de-design-para-o-natal_145391-1208.jpg?semt=ais_hybrid&w=740&q=80'); background-repeat: repeat; background-size: 50px 50px; opacity: 0.1; }
+body.xmas-mode::after { content: ""; position: fixed; top: -40px; left: 50%; transform: translateX(-50%); width: 400px; height: 400px; z-index: 101; pointer-events: none; background-image: url('https://png.pngtree.com/png-clipart/20230408/ourmid/pngtree-christmas-wreath-holly-decoration-with-poinsettia-png-image_6691156.png'); background-size: contain; background-repeat: no-repeat; background-position: center top; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); }
+body.xmas-mode .welcome-screen h1 { background: linear-gradient(90deg, #0b57d0 0%, #00e6ff 40%, #a259ff 80%, #ff2e9a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: transparent; position: relative; z-index: 102; }
+.main-content h2, .main-content h3, body.xmas-mode .main-content h2, body.xmas-mode .main-content h3, .main-content .app-name { background: linear-gradient(90deg, #0b57d0 0%, #00e6ff 40%, #a259ff 80%, #ff2e9a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: transparent; font-weight: 600; }
+body.xmas-mode .avatar-icon.ai { background: linear-gradient(135deg, #4285F4, #9C27B0); border: 1px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+body.xmas-mode .nav-item.active, body.xmas-mode .login-btn { background: linear-gradient(135deg, #d3e3fd 0%, #e8f0fe 100%); color: #041e49; font-weight: 600; border: 1px solid #c2e7ff; }
+body.xmas-mode .new-chat-btn { background-color: #d3e3fd; color: #041e49; border: none; }
+body.xmas-mode .login-box, body.xmas-mode .modal-box { background-color: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: none; }
+body.xmas-mode .input-group, body.xmas-mode .prompt-bar { background-color: #f0f4f9; border: 1px solid transparent; }
+body.xmas-mode .input-group input, body.xmas-mode .prompt-bar textarea { color: #1f1f1f; }
+body.xmas-mode .prompt-bar:focus-within { background-color: #ffffff; border-color: #c2e7ff; box-shadow: 0 2px 8px rgba(11, 87, 208, 0.15); }
+body.xmas-mode .badge-pro { background: linear-gradient(90deg, #1967d2, #8ab4f8); color: white; border: none; }
+body.xmas-mode .sidebar-footer button { color: #0b57d0; }
+@media (max-width: 768px) { body.xmas-mode::after { width: 250px; height: 250px; top: -20px; } }
+.snow-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 140; overflow: hidden; opacity: 0; }
 body.xmas-mode .snow-overlay { opacity: 1; }
-body.xmas-mode .snow-overlay::before {
-    animation: snowFall 5s linear forwards;
-}
-
-@keyframes snowFall {
-    0% {
-        transform: translateY(-10%);
-        opacity: 1;
-    }
-    70% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(120%);
-        opacity: 0;
-    }
-}
-
-/* Make the effect lighter on small screens */
-@media (max-width: 768px) {
-    .snow-overlay::before { box-shadow: 
-        5vw 5vh 1px rgba(255,255,255,0.95),
-        20vw 10vh 1px rgba(255,255,255,0.9),
-        35vw 8vh 1px rgba(255,255,255,0.9),
-        50vw 12vh 1px rgba(255,255,255,0.9),
-        70vw 6vh 1px rgba(255,255,255,0.9),
-        90vw 14vh 1px rgba(255,255,255,0.9);
-        }
-}
-
-/* Hide the previous pseudo-element-based snowfall (we'll use JS-generated flakes) */
-.snow-overlay::before { display: none !important; }
-
-/* Snowflake elements created via JS */
-.snow-flake {
-    position: absolute;
-    top: 0;
-    pointer-events: none;
-    border-radius: 50%;
-    /* 80% azul-pálido seguido de 20% branco para melhor visibilidade;
-       aumentei contraste do azul em ~20% (hex mais saturado) */
-    background: radial-gradient(circle at 30% 30%, #c0e8ff 0%, #c0e8ff 80%, #ffffff 100%);
-    /* sombra mais forte para destaque */
-    box-shadow: 0 1px 3px rgba(140,180,255,0.9), inset 0 0 1px rgba(255,255,255,0.8);
-    filter: blur(0.3px);
-    will-change: transform, opacity;
-}
-
-@keyframes fall-js {
-    0% {
-        transform: translateY(0) rotate(0deg) translateX(0);
-        opacity: 1;
-    }
-    70% { opacity: 1; }
-    100% {
-        transform: translateY(120vh) rotate(360deg) translateX(30px);
-        opacity: 0;
-    }
-}
+.snow-flake { position: absolute; top: 0; pointer-events: none; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #c0e8ff 0%, #c0e8ff 80%, #ffffff 100%); box-shadow: 0 1px 3px rgba(140,180,255,0.9), inset 0 0 1px rgba(255,255,255,0.8); filter: blur(0.3px); will-change: transform, opacity; }
+@keyframes fall-js { 0% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; } 70% { opacity: 1; } 100% { transform: translateY(120vh) rotate(360deg) translateX(30px); opacity: 0; } }
