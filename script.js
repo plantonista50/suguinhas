@@ -490,18 +490,27 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
     chatInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; if(this.value==='') this.style.height='auto'; });
 
+    // ============================================================
+    // 4. FUNÇÃO DE ENVIO ATUALIZADA E ROBUSTA (CORE FIX)
+    // ============================================================
     async function handleSend() {
+        // Verifica gravação pendente
         if (isRecording) { 
             recorder.stopRecording(() => {
                 const file = new File([recorder.getBlob()], `gravacao_${Date.now()}.wav`, { type: 'audio/wav' });
                 selectedFiles.push(file);
-                isRecording = false; btnMic.classList.remove('recording'); btnMic.querySelector('span').textContent='mic';
+                isRecording = false; 
+                btnMic.classList.remove('recording'); 
+                btnMic.querySelector('span').textContent='mic';
                 handleSend(); 
             });
             return;
         }
+
         const text = chatInput.value.trim();
         if (!text && selectedFiles.length === 0) return;
+        
+        // UI
         welcomeScreen.style.display = 'none';
         
         const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper user';
@@ -509,9 +518,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if(text) html += `<div>${text.replace(/\n/g,'<br>')}</div>`;
         wrapper.innerHTML = `<div class="message-content">${html}</div><div class="avatar-icon user">VC</div>`;
         chatHistory.appendChild(wrapper);
+        
         chatInput.value = ''; chatInput.style.height = 'auto';
         const filesToSend = [...selectedFiles]; resetFileInput();
         
+        // Loader
         const ldId = 'ld-'+Date.now();
         const ldDiv = document.createElement('div'); ldDiv.className = 'message-wrapper ai'; ldDiv.id = ldId;
         ldDiv.innerHTML = `<div class="avatar-icon ai"><span class="material-symbols-outlined">smart_toy</span></div><div class="message-content">...</div>`;
@@ -526,27 +537,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const res = await fetch(TOOLS[currentTool].webhook, { method: 'POST', body: formData });
-            const data = await res.json();
-            const aiText = data.message || data.msg || data.resumoCompleto || data.text || (data.length ? JSON.stringify(data) : "Processamento concluído.");
+            
+            // --- TRATAMENTO ROBUSTO DE RESPOSTA ---
+            const rawText = await res.text();
+            let data = {};
+            
+            try { 
+                data = rawText ? JSON.parse(rawText) : {}; 
+            } catch (e) { 
+                data = { message: rawText }; // Fallback para texto puro
+            }
+
+            // Busca inteligente pelo texto
+            let aiText = data.reply || data.message || data.msg || data.resumoCompleto || data.text || data.output || data.result || data;
+
+            // Se ainda for objeto, converte para string
+            if (typeof aiText === 'object') {
+                aiText = JSON.stringify(aiText, null, 2);
+            }
+
             document.getElementById(ldId)?.remove();
             const aiWrapper = document.createElement('div'); aiWrapper.className = 'message-wrapper ai';
             aiWrapper.innerHTML = `<div class="avatar-icon ai"><span class="material-symbols-outlined">smart_toy</span></div><div class="message-content"><pre>${aiText}</pre><div style="text-align:right"><span class="material-symbols-outlined" style="cursor:pointer;color:#666" onclick="copyText(this)">content_copy</span></div></div>`;
             chatHistory.appendChild(aiWrapper);
+
         } catch (e) {
             document.getElementById(ldId)?.remove();
             const errDiv = document.createElement('div'); errDiv.className = 'message-wrapper ai';
             errDiv.innerHTML = `<div class="avatar-icon ai">⚠️</div><div class="message-content">Erro ao processar.</div>`;
             chatHistory.appendChild(errDiv);
+            console.error("Erro no envio:", e);
         }
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
+    
     window.copyText = function(btn) {
         const pre = btn.closest('.message-content').querySelector('pre');
         navigator.clipboard.writeText(pre.textContent).then(() => { btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='#666',2000); });
     };
 
     // ============================================================
-    // SELETOR DE TEMA (NATAL / PADRÃO) + ANIMAÇÃO DE NEVE JS
+    // 5. SELETOR DE TEMA (NATAL / PADRÃO) + ANIMAÇÃO DE NEVE JS
     // ============================================================
     const themeBtn = document.getElementById('theme-toggle-btn');
     const themeIcon = document.getElementById('theme-icon');
