@@ -3,20 +3,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // 0. ANIMAÇÃO DE ANO NOVO (GOLD SPARKS & FIREWORKS)
     // ============================================================
-    // Verifica se estamos na tela de login
-    // const loginOverlay = document.getElementById('login-screen');
-    // if (loginOverlay && loginOverlay.style.display !== 'none') {
-    //     const canvas = document.createElement('canvas');
-    //     canvas.id = 'ny-canvas';
-    //     loginOverlay.appendChild(canvas);
-    //     const ctx = canvas.getContext('2d');
+    Verifica se estamos na tela de login
+    const loginOverlay = document.getElementById('login-screen');
+    if (loginOverlay && loginOverlay.style.display !== 'none') {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'ny-canvas';
+        loginOverlay.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
         
-    //     let width = window.innerWidth;
-    //     let height = window.innerHeight;
-    //     canvas.width = width;
-    //     canvas.height = height;
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
 
-    //     const goldPalette = ['#bf953f', '#fcf6ba', '#b38728', '#fbf5b7', '#aa771c', '#FFD700'];
+        const goldPalette = ['#bf953f', '#fcf6ba', '#b38728', '#fbf5b7', '#aa771c', '#FFD700'];
 
     //     // --- PARTÍCULAS DESCENDENTES (SPARKS) ---
     //     let sparks = [];
@@ -638,4 +638,5 @@ document.addEventListener('DOMContentLoaded', () => {
 //         });
 //     }
 // });
+
 
