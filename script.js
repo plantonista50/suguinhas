@@ -4,126 +4,126 @@ document.addEventListener('DOMContentLoaded', () => {
     // 0. ANIMAÇÃO DE ANO NOVO (GOLD SPARKS & FIREWORKS)
     // ============================================================
     // Verifica se estamos na tela de login
-    const loginOverlay = document.getElementById('login-screen');
-    if (loginOverlay && loginOverlay.style.display !== 'none') {
-        const canvas = document.createElement('canvas');
-        canvas.id = 'ny-canvas';
-        loginOverlay.appendChild(canvas);
-        const ctx = canvas.getContext('2d');
+    // const loginOverlay = document.getElementById('login-screen');
+    // if (loginOverlay && loginOverlay.style.display !== 'none') {
+    //     const canvas = document.createElement('canvas');
+    //     canvas.id = 'ny-canvas';
+    //     loginOverlay.appendChild(canvas);
+    //     const ctx = canvas.getContext('2d');
         
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
+    //     let width = window.innerWidth;
+    //     let height = window.innerHeight;
+    //     canvas.width = width;
+    //     canvas.height = height;
 
-        const goldPalette = ['#bf953f', '#fcf6ba', '#b38728', '#fbf5b7', '#aa771c', '#FFD700'];
+    //     const goldPalette = ['#bf953f', '#fcf6ba', '#b38728', '#fbf5b7', '#aa771c', '#FFD700'];
 
-        // --- PARTÍCULAS DESCENDENTES (SPARKS) ---
-        let sparks = [];
-        class Spark {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * -height;
-                this.size = Math.random() * 2 + 1;
-                this.speedY = Math.random() * 2 + 1;
-                this.color = goldPalette[Math.floor(Math.random() * goldPalette.length)];
-                this.opacity = Math.random() * 0.8 + 0.2;
-                this.wobble = Math.random() * Math.PI * 2;
-                this.wobbleSpeed = Math.random() * 0.05 + 0.02;
-            }
-            update() {
-                this.y += this.speedY;
-                this.wobble += this.wobbleSpeed;
-                this.x += Math.sin(this.wobble) * 0.5;
-                if (this.y > height) { this.y = Math.random() * -50; this.x = Math.random() * width; }
-            }
-            draw() {
-                ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalAlpha = 1;
-            }
-        }
-        for (let i = 0; i < 100; i++) sparks.push(new Spark());
+    //     // --- PARTÍCULAS DESCENDENTES (SPARKS) ---
+    //     let sparks = [];
+    //     class Spark {
+    //         constructor() {
+    //             this.x = Math.random() * width;
+    //             this.y = Math.random() * -height;
+    //             this.size = Math.random() * 2 + 1;
+    //             this.speedY = Math.random() * 2 + 1;
+    //             this.color = goldPalette[Math.floor(Math.random() * goldPalette.length)];
+    //             this.opacity = Math.random() * 0.8 + 0.2;
+    //             this.wobble = Math.random() * Math.PI * 2;
+    //             this.wobbleSpeed = Math.random() * 0.05 + 0.02;
+    //         }
+    //         update() {
+    //             this.y += this.speedY;
+    //             this.wobble += this.wobbleSpeed;
+    //             this.x += Math.sin(this.wobble) * 0.5;
+    //             if (this.y > height) { this.y = Math.random() * -50; this.x = Math.random() * width; }
+    //         }
+    //         draw() {
+    //             ctx.globalAlpha = this.opacity;
+    //             ctx.fillStyle = this.color;
+    //             ctx.beginPath();
+    //             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    //             ctx.fill();
+    //             ctx.globalAlpha = 1;
+    //         }
+    //     }
+    //     for (let i = 0; i < 100; i++) sparks.push(new Spark());
 
-        // --- FOGOS DE ARTIFÍCIO ---
-        let fireworks = [];
-        let particles = [];
-        class Firework {
-            constructor(tx, ty) {
-                this.x = width / 2;
-                this.y = height;
-                this.tx = tx; this.ty = ty;
-                this.speed = 15;
-                this.angle = Math.atan2(ty - height, tx - width/2);
-                this.colors = goldPalette;
-            }
-            update(index) {
-                let vx = Math.cos(this.angle) * this.speed;
-                let vy = Math.sin(this.angle) * this.speed;
-                this.x += vx; this.y += vy;
-                if (Math.abs(this.y - this.ty) < 20 || this.y < this.ty) {
-                    createParticles(this.x, this.y, this.colors);
-                    fireworks.splice(index, 1);
-                }
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 3, 0, Math.PI*2);
-                ctx.fillStyle = '#FFD700';
-                ctx.fill();
-            }
-        }
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x; this.y = y;
-                this.color = color;
-                this.angle = Math.random() * Math.PI * 2;
-                this.speed = Math.random() * 6 + 1;
-                this.gravity = 0.1;
-                this.alpha = 1;
-                this.decay = 0.015;
-            }
-            update(index) {
-                this.speed *= 0.96;
-                this.x += Math.cos(this.angle) * this.speed;
-                this.y += Math.sin(this.angle) * this.speed + this.gravity;
-                this.alpha -= this.decay;
-                if (this.alpha <= 0) particles.splice(index, 1);
-            }
-            draw() {
-                ctx.globalAlpha = this.alpha;
-                ctx.strokeStyle = this.color;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(this.x, this.y);
-                ctx.lineTo(this.x + Math.cos(this.angle)*2, this.y + Math.sin(this.angle)*2);
-                ctx.stroke();
-                ctx.globalAlpha = 1;
-            }
-        }
-        function createParticles(x, y, colors) {
-            for(let i=0; i<60; i++) particles.push(new Particle(x, y, colors[Math.floor(Math.random()*colors.length)]));
-        }
+    //     // --- FOGOS DE ARTIFÍCIO ---
+    //     let fireworks = [];
+    //     let particles = [];
+    //     class Firework {
+    //         constructor(tx, ty) {
+    //             this.x = width / 2;
+    //             this.y = height;
+    //             this.tx = tx; this.ty = ty;
+    //             this.speed = 15;
+    //             this.angle = Math.atan2(ty - height, tx - width/2);
+    //             this.colors = goldPalette;
+    //         }
+    //         update(index) {
+    //             let vx = Math.cos(this.angle) * this.speed;
+    //             let vy = Math.sin(this.angle) * this.speed;
+    //             this.x += vx; this.y += vy;
+    //             if (Math.abs(this.y - this.ty) < 20 || this.y < this.ty) {
+    //                 createParticles(this.x, this.y, this.colors);
+    //                 fireworks.splice(index, 1);
+    //             }
+    //         }
+    //         draw() {
+    //             ctx.beginPath();
+    //             ctx.arc(this.x, this.y, 3, 0, Math.PI*2);
+    //             ctx.fillStyle = '#FFD700';
+    //             ctx.fill();
+    //         }
+    //     }
+    //     class Particle {
+    //         constructor(x, y, color) {
+    //             this.x = x; this.y = y;
+    //             this.color = color;
+    //             this.angle = Math.random() * Math.PI * 2;
+    //             this.speed = Math.random() * 6 + 1;
+    //             this.gravity = 0.1;
+    //             this.alpha = 1;
+    //             this.decay = 0.015;
+    //         }
+    //         update(index) {
+    //             this.speed *= 0.96;
+    //             this.x += Math.cos(this.angle) * this.speed;
+    //             this.y += Math.sin(this.angle) * this.speed + this.gravity;
+    //             this.alpha -= this.decay;
+    //             if (this.alpha <= 0) particles.splice(index, 1);
+    //         }
+    //         draw() {
+    //             ctx.globalAlpha = this.alpha;
+    //             ctx.strokeStyle = this.color;
+    //             ctx.lineWidth = 2;
+    //             ctx.beginPath();
+    //             ctx.moveTo(this.x, this.y);
+    //             ctx.lineTo(this.x + Math.cos(this.angle)*2, this.y + Math.sin(this.angle)*2);
+    //             ctx.stroke();
+    //             ctx.globalAlpha = 1;
+    //         }
+    //     }
+    //     function createParticles(x, y, colors) {
+    //         for(let i=0; i<60; i++) particles.push(new Particle(x, y, colors[Math.floor(Math.random()*colors.length)]));
+    //     }
 
-        // Loop de Animação
-        function animate() {
-            if(loginOverlay.style.display === 'none') return; // Para se logar
-            ctx.clearRect(0, 0, width, height);
+    //     // Loop de Animação
+    //     function animate() {
+    //         if(loginOverlay.style.display === 'none') return; // Para se logar
+    //         ctx.clearRect(0, 0, width, height);
             
-            sparks.forEach(s => { s.update(); s.draw(); });
-            fireworks.forEach((f, i) => { f.update(i); f.draw(); });
-            particles.forEach((p, i) => { p.update(i); p.draw(); });
+    //         sparks.forEach(s => { s.update(); s.draw(); });
+    //         fireworks.forEach((f, i) => { f.update(i); f.draw(); });
+    //         particles.forEach((p, i) => { p.update(i); p.draw(); });
 
-            if(Math.random() < 0.02) fireworks.push(new Firework(Math.random()*width, Math.random()*(height/2)));
-            requestAnimationFrame(animate);
-        }
-        animate();
+    //         if(Math.random() < 0.02) fireworks.push(new Firework(Math.random()*width, Math.random()*(height/2)));
+    //         requestAnimationFrame(animate);
+    //     }
+    //     animate();
 
-        window.addEventListener('resize', () => { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; });
-    }
+    //     window.addEventListener('resize', () => { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; });
+    // }
 
     // --- ESTADO GLOBAL (Código Original) ---
     let currentTool = 'prontuario'; 
@@ -578,63 +578,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ============================================================
     // 5. SELETOR DE TEMA (NATAL / PADRÃO) + ANIMAÇÃO DE NEVE JS
-    // ============================================================
-    const themeBtn = document.getElementById('theme-toggle-btn');
-    const themeIcon = document.getElementById('theme-icon');
-    const themeText = document.getElementById('theme-text');
-    let isXmas = false;
+//     // ============================================================
+//     const themeBtn = document.getElementById('theme-toggle-btn');
+//     const themeIcon = document.getElementById('theme-icon');
+//     const themeText = document.getElementById('theme-text');
+//     let isXmas = false;
 
-    function startSnowJS({ duration = 5000, count = 80, sizeScale = 0.8 } = {}) {
-        const overlay = document.querySelector('.snow-overlay');
-        if (!overlay) return;
-        overlay.innerHTML = '';
-        overlay.style.opacity = '1';
+//     function startSnowJS({ duration = 5000, count = 80, sizeScale = 0.8 } = {}) {
+//         const overlay = document.querySelector('.snow-overlay');
+//         if (!overlay) return;
+//         overlay.innerHTML = '';
+//         overlay.style.opacity = '1';
 
-        const baseOriginal = 6;
-        const baseSize = baseOriginal * sizeScale;
+//         const baseOriginal = 6;
+//         const baseSize = baseOriginal * sizeScale;
 
-        for (let i = 0; i < count; i++) {
-            const flake = document.createElement('div');
-            flake.className = 'snow-flake';
-            const randomFactor = 0.6 + Math.random() * 0.8; 
-            const size = Math.max(1, baseSize * randomFactor);
-            flake.style.width = size + 'px';
-            flake.style.height = size + 'px';
-            flake.style.left = (Math.random() * 100) + 'vw';
-            flake.style.top = (-5 - Math.random() * 20) + 'vh';
-            flake.style.opacity = (0.5 + Math.random() * 0.5).toString();
-            const delay = (Math.random() * 0.4).toFixed(2);
-            flake.style.animation = `fall-js ${duration}ms linear ${delay}s forwards`;
-            overlay.appendChild(flake);
-        }
-        setTimeout(() => { overlay.innerHTML = ''; overlay.style.opacity = ''; }, duration + 600);
-    }
+//         for (let i = 0; i < count; i++) {
+//             const flake = document.createElement('div');
+//             flake.className = 'snow-flake';
+//             const randomFactor = 0.6 + Math.random() * 0.8; 
+//             const size = Math.max(1, baseSize * randomFactor);
+//             flake.style.width = size + 'px';
+//             flake.style.height = size + 'px';
+//             flake.style.left = (Math.random() * 100) + 'vw';
+//             flake.style.top = (-5 - Math.random() * 20) + 'vh';
+//             flake.style.opacity = (0.5 + Math.random() * 0.5).toString();
+//             const delay = (Math.random() * 0.4).toFixed(2);
+//             flake.style.animation = `fall-js ${duration}ms linear ${delay}s forwards`;
+//             overlay.appendChild(flake);
+//         }
+//         setTimeout(() => { overlay.innerHTML = ''; overlay.style.opacity = ''; }, duration + 600);
+//     }
 
-    const bodyObserver = new MutationObserver((mutations) => {
-        for (const m of mutations) {
-            if (m.attributeName === 'class') {
-                const active = document.body.classList.contains('xmas-mode');
-                if (active) startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
-            }
-        }
-    });
-    bodyObserver.observe(document.body, { attributes: true });
+//     const bodyObserver = new MutationObserver((mutations) => {
+//         for (const m of mutations) {
+//             if (m.attributeName === 'class') {
+//                 const active = document.body.classList.contains('xmas-mode');
+//                 if (active) startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
+//             }
+//         }
+//     });
+//     bodyObserver.observe(document.body, { attributes: true });
 
-    if (themeBtn) {
-        themeBtn.addEventListener('click', () => {
-            isXmas = !isXmas;
-            document.body.classList.toggle('xmas-mode');
+//     if (themeBtn) {
+//         themeBtn.addEventListener('click', () => {
+//             isXmas = !isXmas;
+//             document.body.classList.toggle('xmas-mode');
 
-            if (isXmas) {
-                themeIcon.textContent = 'ac_unit';
-                themeText.textContent = 'Modo Natal';
-                themeBtn.style.color = 'var(--accent-color)';
-                startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
-            } else {
-                themeIcon.textContent = 'settings';
-                themeText.textContent = 'Modo Dark';
-                themeBtn.style.color = '';
-            }
-        });
-    }
-});
+//             if (isXmas) {
+//                 themeIcon.textContent = 'ac_unit';
+//                 themeText.textContent = 'Modo Natal';
+//                 themeBtn.style.color = 'var(--accent-color)';
+//                 startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
+//             } else {
+//                 themeIcon.textContent = 'settings';
+//                 themeText.textContent = 'Modo Dark';
+//                 themeBtn.style.color = '';
+//             }
+//         });
+//     }
+// });
+
