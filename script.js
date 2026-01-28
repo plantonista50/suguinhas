@@ -445,28 +445,66 @@ document.addEventListener('DOMContentLoaded', () => {
         resetFileInput(); chatInput.value = ''; chatInput.style.height = 'auto';
     }
 
+    // --- Variável Global Adicional para o Stream ---
+    let mediaStream = null; 
+
     if (btnMic) btnMic.addEventListener('click', async () => {
         if (!isRecording) {
+            // --- INICIAR GRAVAÇÃO ---
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                if (typeof RecordRTC === 'undefined') return alert("Erro: Biblioteca RecordRTC não carregada.");
-                recorder = new RecordRTC(stream, { type: 'audio', mimeType: 'audio/wav', recorderType: RecordRTC.StereoAudioRecorder, numberOfAudioChannels: 1, desiredSampRate: 16000 });
+                // 1. Verifica se a lib existe
+                if (typeof RecordRTC === 'undefined') {
+                    return alert("Erro: A biblioteca RecordRTC não foi carregada no HTML.");
+                }
+
+                // 2. Pede permissão e guarda na variável global
+                mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // 3. Configura o Recorder
+                recorder = new RecordRTC(mediaStream, { 
+                    type: 'audio', 
+                    mimeType: 'audio/wav', 
+                    recorderType: RecordRTC.StereoAudioRecorder, 
+                    numberOfAudioChannels: 1, 
+                    desiredSampRate: 16000 
+                });
+
                 recorder.startRecording();
                 isRecording = true;
+
+                // 4. Atualiza UI
                 btnMic.classList.add('recording');
                 btnMic.querySelector('span').textContent = 'stop_circle';
                 chatInput.placeholder = "Gravando (WAV)...";
-            } catch (e) { alert("Erro ao acessar microfone."); }
+
+            } catch (e) { 
+                console.error(e);
+                alert("Erro ao acessar microfone. Verifique se o site tem permissão HTTPS ou se o microfone está conectado."); 
+            }
         } else {
+            // --- PARAR GRAVAÇÃO ---
             recorder.stopRecording(() => {
-                const file = new File([recorder.getBlob()], `gravacao_${Date.now()}.wav`, { type: 'audio/wav' });
+                const blob = recorder.getBlob();
+                const file = new File([blob], `gravacao_${Date.now()}.wav`, { type: 'audio/wav' });
+                
                 selectedFiles.push(file);
                 renderFileList();
+                
+                // Resetar estados
                 isRecording = false;
                 btnMic.classList.remove('recording');
                 btnMic.querySelector('span').textContent = 'mic';
                 chatInput.placeholder = TOOLS[currentTool].placeholder;
-                recorder.getInternalRecorder().blob = null; recorder.camera.stop(); 
+                
+                // --- CORREÇÃO IMPORTANTE: Parar o microfone (hardware) ---
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    mediaStream = null;
+                }
+                
+                // Limpeza interna do recorder
+                recorder.destroy();
+                recorder = null;
             });
         }
     });
@@ -638,6 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
 
 
 
