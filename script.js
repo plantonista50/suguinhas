@@ -579,65 +579,66 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // 5. SELETOR DE TEMA (NATAL / PADRÃO) + ANIMAÇÃO DE NEVE JS
 //     // ============================================================
-//     const themeBtn = document.getElementById('theme-toggle-btn');
-//     const themeIcon = document.getElementById('theme-icon');
-//     const themeText = document.getElementById('theme-text');
-//     let isXmas = false;
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    const themeIcon = document.getElementById('theme-icon');
+    const themeText = document.getElementById('theme-text');
+    let isXmas = false;
 
-//     function startSnowJS({ duration = 5000, count = 80, sizeScale = 0.8 } = {}) {
-//         const overlay = document.querySelector('.snow-overlay');
-//         if (!overlay) return;
-//         overlay.innerHTML = '';
-//         overlay.style.opacity = '1';
+    function startSnowJS({ duration = 5000, count = 80, sizeScale = 0.8 } = {}) {
+        const overlay = document.querySelector('.snow-overlay');
+        if (!overlay) return;
+        overlay.innerHTML = '';
+        overlay.style.opacity = '1';
 
-//         const baseOriginal = 6;
-//         const baseSize = baseOriginal * sizeScale;
+        const baseOriginal = 6;
+        const baseSize = baseOriginal * sizeScale;
 
-//         for (let i = 0; i < count; i++) {
-//             const flake = document.createElement('div');
-//             flake.className = 'snow-flake';
-//             const randomFactor = 0.6 + Math.random() * 0.8; 
-//             const size = Math.max(1, baseSize * randomFactor);
-//             flake.style.width = size + 'px';
-//             flake.style.height = size + 'px';
-//             flake.style.left = (Math.random() * 100) + 'vw';
-//             flake.style.top = (-5 - Math.random() * 20) + 'vh';
-//             flake.style.opacity = (0.5 + Math.random() * 0.5).toString();
-//             const delay = (Math.random() * 0.4).toFixed(2);
-//             flake.style.animation = `fall-js ${duration}ms linear ${delay}s forwards`;
-//             overlay.appendChild(flake);
-//         }
-//         setTimeout(() => { overlay.innerHTML = ''; overlay.style.opacity = ''; }, duration + 600);
-//     }
+        for (let i = 0; i < count; i++) {
+            const flake = document.createElement('div');
+            flake.className = 'snow-flake';
+            const randomFactor = 0.6 + Math.random() * 0.8; 
+            const size = Math.max(1, baseSize * randomFactor);
+            flake.style.width = size + 'px';
+            flake.style.height = size + 'px';
+            flake.style.left = (Math.random() * 100) + 'vw';
+            flake.style.top = (-5 - Math.random() * 20) + 'vh';
+            flake.style.opacity = (0.5 + Math.random() * 0.5).toString();
+            const delay = (Math.random() * 0.4).toFixed(2);
+            flake.style.animation = `fall-js ${duration}ms linear ${delay}s forwards`;
+            overlay.appendChild(flake);
+        }
+        setTimeout(() => { overlay.innerHTML = ''; overlay.style.opacity = ''; }, duration + 600);
+    }
 
-//     const bodyObserver = new MutationObserver((mutations) => {
-//         for (const m of mutations) {
-//             if (m.attributeName === 'class') {
-//                 const active = document.body.classList.contains('xmas-mode');
-//                 if (active) startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
-//             }
-//         }
-//     });
-//     bodyObserver.observe(document.body, { attributes: true });
+    const bodyObserver = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            if (m.attributeName === 'class') {
+                const active = document.body.classList.contains('xmas-mode');
+                if (active) startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
+            }
+        }
+    });
+    bodyObserver.observe(document.body, { attributes: true });
 
-//     if (themeBtn) {
-//         themeBtn.addEventListener('click', () => {
-//             isXmas = !isXmas;
-//             document.body.classList.toggle('xmas-mode');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            isXmas = !isXmas;
+            document.body.classList.toggle('xmas-mode');
 
-//             if (isXmas) {
-//                 themeIcon.textContent = 'ac_unit';
-//                 themeText.textContent = 'Modo Natal';
-//                 themeBtn.style.color = 'var(--accent-color)';
-//                 startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
-//             } else {
-//                 themeIcon.textContent = 'settings';
-//                 themeText.textContent = 'Modo Dark';
-//                 themeBtn.style.color = '';
-//             }
-//         });
-//     }
-// });
+            if (isXmas) {
+                themeIcon.textContent = 'ac_unit';
+                themeText.textContent = 'Modo Natal';
+                themeBtn.style.color = 'var(--accent-color)';
+                startSnowJS({ duration: 5000, count: 150, sizeScale: 0.8 });
+            } else {
+                themeIcon.textContent = 'settings';
+                themeText.textContent = 'Modo Dark';
+                themeBtn.style.color = '';
+            }
+        });
+    }
+});
+
 
 
 
