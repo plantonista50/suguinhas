@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // 0. ANIMAÇÃO DE ANO NOVO (GOLD SPARKS & FIREWORKS)
     // ============================================================
-    Verifica se estamos na tela de login
+    // Verifica se estamos na tela de login
     const loginOverlay = document.getElementById('login-screen');
     if (loginOverlay && loginOverlay.style.display !== 'none') {
         const canvas = document.createElement('canvas');
@@ -638,6 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
 
 
 
