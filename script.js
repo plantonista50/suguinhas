@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ============================================================
-    // 0. ANIMAÇÃO DE ANO NOVO (GOLD SPARKS & FIREWORKS)
+    // 0. ANIMAÇÃO DE ANO NOVO (INALTERADO)
     // ============================================================
     const loginOverlay = document.getElementById('login-screen');
     if (loginOverlay && loginOverlay.style.display !== 'none') {
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.id = 'ny-canvas';
         loginOverlay.appendChild(canvas);
         const ctx = canvas.getContext('2d');
-        
+
         let width = window.innerWidth;
         let height = window.innerHeight;
         canvas.width = width;
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================================
-    // UX STATUS SIMULATION (PING-PONG, NÃO QUEBRA NADA)
+    // UX STATUS SIMULATION (PING-PONG + FIX DE RENDER)
     // ============================================================
 
     const UX_STEPS = [
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             uxIndex += uxDirection;
 
             if (uxIndex === UX_STEPS.length - 1 || uxIndex === 0) {
-                uxDirection *= -1; // efeito vai-e-volta
+                uxDirection *= -1; // efeito ping-pong
             }
 
             updateFn(UX_STEPS[uxIndex].text);
@@ -103,12 +103,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================================
-    // 4. FUNÇÃO DE ENVIO ATUALIZADA E ROBUSTA (CORE FIX)
+    // FUNÇÃO DE ENVIO (COM UX SIMULADO)
     // ============================================================
 
     async function handleSend() {
 
-        if (isRecording) { 
+        if (isRecording) {
             recorder.stopRecording(() => {
                 const file = new File(
                     [recorder.getBlob()],
@@ -116,10 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     { type: 'audio/wav' }
                 );
                 selectedFiles.push(file);
-                isRecording = false; 
-                btnMic.classList.remove('recording'); 
-                btnMic.querySelector('span').textContent='mic';
-                handleSend(); 
+                isRecording = false;
+                btnMic.classList.remove('recording');
+                btnMic.querySelector('span').textContent = 'mic';
+                handleSend();
             });
             return;
         }
@@ -149,10 +149,13 @@ document.addEventListener('DOMContentLoaded', () => {
         chatHistory.appendChild(ldDiv);
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
-        // 🔹 INICIA SIMULAÇÃO UX
         const msgContent = ldDiv.querySelector('.message-content');
-        startUxSimulation((text) => {
-            if (msgContent) msgContent.textContent = text;
+
+        // 🔹 FIX: garante que o DOM foi pintado antes de iniciar a simulação
+        requestAnimationFrame(() => {
+            startUxSimulation((text) => {
+                if (msgContent) msgContent.textContent = text;
+            });
         });
 
         const formData = new FormData();
@@ -167,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
 
-            // 🔹 PARA SIMULAÇÃO UX
             stopUxSimulation();
             document.getElementById(ldId)?.remove();
 
@@ -176,4 +178,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            addMessage('ai', data.response || 'Resposta indisponível.')
+            addMessage('ai', data.response || 'Resposta indisponível.');
+
+        } catch (err) {
+            console.error(err);
+
+            stopUxSimulation();
+            document.getElementById(ldId)?.remove();
+
+            addMessage('ai', 'Erro ao processar o documento.');
+        }
+    }
+
+    // ============================================================
+    // RESTANTE DO SEU CÓDIGO ORIGINAL CONTINUA AQUI (INALTERADO)
+    // ============================================================
+
+});
