@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.schemas import ChatRequest
 from app.auth import verify_token
 from app.lgpd import process_text
@@ -7,6 +9,15 @@ from app.llm.router import stream_llm
 import asyncio
 
 app = FastAPI(title="SuGa GPT Backend")
+
+# ✅ CORS TEM QUE FICAR AQUI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # depois restringimos
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/chat/stream")
 async def chat_stream(
@@ -18,9 +29,14 @@ async def chat_stream(
     async def event_generator():
         async for token in await stream_llm(clean_text, payload.model):
             yield token
-            await asyncio.sleep(0)  # cooperação async
+            await asyncio.sleep(0)
 
     return StreamingResponse(
         event_generator(),
-        media_type="text/plain"
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
     )
